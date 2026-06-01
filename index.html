@@ -396,7 +396,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
         <div class="tool-tag" style="border-color:var(--b);color:var(--b2);"><div class="tdot" style="background:var(--b)"></div>Claude 수정</div>
       </div>
       <div class="checklist" id="cl3">
-        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb30">　</div><div class="ci-body"><div class="ci-text">섹션 구성 검토</div><div class="ci-desc">히어로→특장점→사용장면→CTA 순서가 이 제품에 맞는지 확인. 순서 변경 필요 시 Claude에 요청</div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t1')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb30">　</div><div class="ci-body"><div class="ci-text">섹션 구성 검토</div><div class="ci-desc">히어로→특장점→사용장면→CTA 순서가 이 제품에 맞는지 확인. 순서 변경 필요 시 Claude에 요청</div><div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t1" style="white-space:pre-wrap;"></div></div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t1')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
         <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb31">　</div><div class="ci-body">
           <div class="ci-text">카피 수정 및 확정</div>
           <div class="ci-desc">헤드카피·본문 문구 검토. 수정 필요 시 프롬프트 활용</div>
@@ -405,8 +405,8 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 "히어로 헤드카피를 쿠팡 버전으로. 더 직접적이고 혜택 중심으로"<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
           <div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t2')">프롬프트 복사</button></div>
         </div><div class="who who-p">기획자 (민지홍)</div></div>
-        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb32">　</div><div class="ci-body"><div class="ci-text">이미지 목록 확정</div><div class="ci-desc">보유/AI생성필요/촬영필요 분류 확인. MJ 프롬프트 방향 검토</div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t3')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
-        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb33">　</div><div class="ci-body"><div class="ci-text">planning.md 최종 업데이트 후 디자이너 알림</div><div class="ci-desc">수정 반영 후 파일 업데이트. 카톡: "기획 확정! planning.md 확인 후 이미지 작업 시작해줘요"</div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t4')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb32">　</div><div class="ci-body"><div class="ci-text">이미지 목록 확정</div><div class="ci-desc">보유/AI생성필요/촬영필요 분류 확인. MJ 프롬프트 방향 검토</div><div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t3" style="white-space:pre-wrap;"></div></div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t3')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb33">　</div><div class="ci-body"><div class="ci-text">planning.md 최종 업데이트 후 디자이너 알림</div><div class="ci-desc">수정 반영 후 파일 업데이트. 카톡: "기획 확정! planning.md 확인 후 이미지 작업 시작해줘요"</div><div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t4" style="white-space:pre-wrap;"></div></div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t4')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
       </div>
       <div class="sc s3b" id="sc3">✓ STEP 03 완료 — 이미지 생성으로</div>
     </div>
@@ -1014,6 +1014,12 @@ function copyPrompt(btn,key){
     setTimeout(()=>btn.textContent=orig,1600);
   });
 }
+
+// 미리보기 박스를 TASK_PROMPTS 내용으로 채움 (단일 출처)
+['t1','t3','t4'].forEach(k=>{
+  const el=document.getElementById('pv-'+k);
+  if(el) el.textContent=TASK_PROMPTS[k];
+});
 
 // ═══════════════════════════════════════
 //  BRIEF.MD 작성 폼
