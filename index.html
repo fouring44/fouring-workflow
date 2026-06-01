@@ -215,6 +215,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .pv-btn:hover{border-color:var(--text3);}
 .pv-btn-primary{background:var(--o);border-color:var(--o);color:#fff;}
 .pv-btn-primary:hover{filter:brightness(1.08);}
+.pv-btn-claude{background:var(--b);border-color:var(--b);color:#fff;}
+.pv-btn-claude:hover{filter:brightness(1.08);}
+.pv-guide{font-size:12px;color:var(--text3);line-height:1.9;margin-top:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;}
 .pv-count{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-left:auto;}
 .pv-thumbs-section{margin:22px 0;display:none;}
 .pv-section-label{font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:10px;}
@@ -239,6 +242,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .pv-preview{width:100%;background:#fff;border-radius:4px;overflow:hidden;}
 .pv-preview .pv-img{display:block;width:100%;}
 .pv-empty{padding:70px 20px;text-align:center;color:#999;font-size:13px;}
+.pv-timestamp{font-size:12px;color:#888;font-family:'DM Mono',monospace;padding:12px 16px;border-bottom:1px solid #eee;background:#fafafa;}
 
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -607,8 +611,10 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
         <button class="pv-btn pv-btn-primary" onclick="document.getElementById('pvFileInput').click()">📂 이미지 업로드</button>
         <input type="file" id="pvFileInput" accept="image/png,image/jpeg" multiple style="display:none" onchange="pvAddFiles(event)"/>
         <button class="pv-btn" onclick="pvClearAll()">🗑️ 전체 초기화</button>
+        <button class="pv-btn pv-btn-claude" onclick="pvCopyFeedback(this)">🤖 Claude에게 피드백 요청</button>
         <span class="pv-count" id="pvCount">0장 업로드됨</span>
       </div>
+      <div class="pv-guide">① 이 버튼으로 프롬프트 복사<br>② Claude.ai 새 대화 열기<br>③ 프롬프트 붙여넣기<br>④ 미리보기 이미지들을 Claude.ai에 첨부<br>⑤ 전송 → Claude 피드백 확인</div>
     </div>
 
     <div class="pv-thumbs-section" id="pvThumbsSection">
@@ -1174,8 +1180,18 @@ let pvImages=[];      // {id, name, url}
 let pvIdSeq=0;
 let pvDragIndex=null;
 let pvWidth='full';
+let pvLastUpdate='';  // 마지막 업로드/변경 시각 (포맷된 문자열)
 
 function pvEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function pvFormatDate(d){
+  const yr=d.getFullYear(), mo=d.getMonth()+1, day=d.getDate();
+  const ampm=d.getHours()<12?'오전':'오후';
+  let h=d.getHours()%12; if(h===0) h=12;
+  const min=String(d.getMinutes()).padStart(2,'0');
+  return `${yr}년 ${mo}월 ${day}일 ${ampm} ${h}:${min}`;
+}
+function pvTouch(){ pvLastUpdate=pvFormatDate(new Date()); }
 
 function pvAddFiles(ev){
   const files=Array.from(ev.target.files||[]).filter(f=>/^image\/(png|jpeg)$/.test(f.type)||/\.(png|jpe?g)$/i.test(f.name));
@@ -1187,14 +1203,15 @@ function pvAddFiles(ev){
     reader.readAsDataURL(f);
   });
   ev.target.value='';                                 // 같은 파일 재선택 허용
+  if(files.length) pvTouch();                          // 업로드 시각 기록
   pvRender();
 }
 
-function pvRemove(id){ pvImages=pvImages.filter(im=>im.id!==id); pvRender(); }
+function pvRemove(id){ pvImages=pvImages.filter(im=>im.id!==id); pvTouch(); pvRender(); }
 
 function pvClearAll(){
   if(pvImages.length && !confirm('업로드된 이미지를 모두 삭제할까요?')) return;
-  pvImages=[]; pvRender();
+  pvImages=[]; pvLastUpdate=''; pvRender();
 }
 
 function pvMove(i,dir){
@@ -1250,8 +1267,37 @@ function pvRender(){
         <button onclick="pvMove(${i},1)" title="뒤로">⬇️</button>
       </div>
     </div>`).join('');
-  pv.innerHTML=pvImages.map(im=>`<img class="pv-img" src="${im.url}" alt="" title="${pvEsc(im.name)}"/>`).join('');
+  const stamp=pvLastUpdate?`<div class="pv-timestamp">📅 마지막 업로드: ${pvEsc(pvLastUpdate)}</div>`:'';
+  pv.innerHTML=stamp+pvImages.map(im=>`<img class="pv-img" src="${im.url}" alt="" title="${pvEsc(im.name)}"/>`).join('');
   pv.style.width = (pvWidth==='full') ? '100%' : (pvWidth+'px');   // 폭 유지
+}
+
+// Claude 피드백 요청 프롬프트 (클릭 시점 실제 값 자동 삽입)
+function pvWidthLabel(){
+  return {full:'전체폭','860':'860px (스마트스토어)','800':'800px (쿠팡)','375':'375px (모바일)'}[pvWidth]||pvWidth;
+}
+function pvCopyFeedback(btn){
+  const md=`우리 제품 상세페이지 초안이야.
+아래 이미지들을 순서대로 보고 평가해줘.
+
+[이미지를 여기에 첨부해줘]
+
+📋 업로드 정보:
+- 마지막 업로드: ${pvLastUpdate||'아직 없음'}
+- 이미지 수: ${pvImages.length}장
+- 확인 폭: ${pvWidthLabel()}
+
+평가 항목:
+1. 전체적인 구성과 흐름 (히어로→특장점→사용장면→CTA)
+2. 구매전환에 효과적인지
+3. 각 섹션별 개선 포인트
+4. 이미지 배치와 시각적 균형
+5. 전체 총평 및 수정 우선순위 3가지`;
+  navigator.clipboard.writeText(md).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent='복사됨 ✓';
+    setTimeout(()=>btn.textContent=orig,1600);
+  });
 }
 
 // ═══════════════════════════════════════
