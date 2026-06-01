@@ -400,9 +400,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
         <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb31">　</div><div class="ci-body">
           <div class="ci-text">카피 수정 및 확정</div>
           <div class="ci-desc">헤드카피·본문 문구 검토. 수정 필요 시 프롬프트 활용</div>
-          <div class="prompt-wrap"><div class="prompt-label">💬 수정 프롬프트 예시</div>
-          <div class="prompt-box">"특장점 섹션 카피를 더 감성적으로. 30대 여성이 공감할 수 있는 톤으로"
-"히어로 헤드카피를 쿠팡 버전으로. 더 직접적이고 혜택 중심으로"<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
+          <div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t2" style="white-space:pre-wrap;"></div></div>
           <div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t2')">프롬프트 복사</button></div>
         </div><div class="who who-p">기획자 (민지홍)</div></div>
         <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb32">　</div><div class="ci-body"><div class="ci-text">이미지 목록 확정</div><div class="ci-desc">보유/AI생성필요/촬영필요 분류 확인. MJ 프롬프트 방향 검토</div><div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t3" style="white-space:pre-wrap;"></div></div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t3')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
@@ -1016,7 +1014,7 @@ function copyPrompt(btn,key){
 }
 
 // 미리보기 박스를 TASK_PROMPTS 내용으로 채움 (단일 출처)
-['t1','t3','t4'].forEach(k=>{
+['t1','t2','t3','t4'].forEach(k=>{
   const el=document.getElementById('pv-'+k);
   if(el) el.textContent=TASK_PROMPTS[k];
 });
