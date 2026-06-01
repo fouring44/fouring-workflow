@@ -163,6 +163,36 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .rf-btn.rf-d.active{background:var(--o);border-color:transparent;color:#fff;}
 .rf-btn.active .rf-dot{background:#fff;}
 
+/* brief 작성 버튼 + 모달 */
+.brief-open-btn{margin-top:12px;background:var(--surface2);border:1px solid var(--p);color:var(--p2);border-radius:6px;padding:9px 18px;font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .15s;}
+.brief-open-btn:hover{background:var(--p);color:#fff;}
+.bf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:600;align-items:center;justify-content:center;padding:20px;}
+.bf-card{background:var(--surface);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:600px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;}
+.bf-head{flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;}
+.bf-head h3{font-size:17px;font-weight:500;color:var(--text);}
+.bf-close{background:none;border:none;color:var(--text3);font-size:24px;line-height:1;cursor:pointer;padding:0 4px;}
+.bf-close:hover{color:var(--text);}
+.bf-body{overflow-y:auto;padding:4px 24px;}
+.bf-section{padding:20px 0;border-bottom:1px solid var(--border);}
+.bf-section:last-child{border-bottom:none;}
+.bf-section-title{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:14px;font-family:'DM Mono',monospace;letter-spacing:.06em;text-transform:uppercase;}
+.bf-field{margin-bottom:14px;}
+.bf-field:last-child{margin-bottom:0;}
+.bf-label{font-size:12px;color:var(--text3);margin-bottom:6px;display:block;}
+.bf-input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;transition:border-color .15s;}
+.bf-input:focus{border-color:var(--o);}
+.bf-input::placeholder{color:var(--text3);}
+.bf-checks{display:flex;flex-direction:column;gap:11px;}
+.bf-check{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text);cursor:pointer;}
+.bf-check input{width:16px;height:16px;cursor:pointer;accent-color:var(--o);flex-shrink:0;}
+.bf-cpa{margin-top:10px;margin-left:26px;display:none;}
+.bf-foot{flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);padding:16px 24px;display:flex;gap:10px;justify-content:flex-end;}
+.bf-btn{border:none;border-radius:8px;padding:11px 20px;font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .15s;}
+.bf-btn-copy{background:var(--surface2);color:var(--text);border:1px solid var(--border2);}
+.bf-btn-copy:hover{border-color:var(--text3);}
+.bf-btn-save{background:var(--o);color:#fff;}
+.bf-btn-save:hover{filter:brightness(1.1);}
+
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
@@ -266,6 +296,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
           <div class="ci-desc">소구점 5개·타겟·가격·채널·참고사항. _템플릿/brief_양식.md 복사해서 작성</div>
           <div class="prompt-wrap"><div class="prompt-label">📄 Claude 프롬프트 — Drive MCP 연결 시</div>
           <div class="prompt-box">훠링-상세페이지/진행중/[제품명]/brief.md 파일 읽어줘<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
+          <button class="brief-open-btn" onclick="event.stopPropagation();openBriefForm()">📝 brief 작성하기</button>
         </div><div class="who who-p">기획자 (민지홍)</div></div>
       </div>
       <div class="sc s1b" id="sc1">✓ STEP 01 완료 — 기획안 생성으로</div>
@@ -476,6 +507,81 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     <div style="display:flex;gap:8px;justify-content:flex-end;">
       <button onclick="closeAddProduct()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:8px 18px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;">취소</button>
       <button onclick="confirmAddProduct()" style="background:var(--o);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;font-weight:500;">추가</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── brief.md 작성 폼 모달 ── -->
+<div id="briefModal" class="bf-overlay" onclick="if(event.target===this)closeBriefForm()">
+  <div class="bf-card">
+    <div class="bf-head">
+      <h3>📝 brief.md 작성</h3>
+      <button class="bf-close" onclick="closeBriefForm()" title="닫기">×</button>
+    </div>
+    <div class="bf-body">
+
+      <div class="bf-section">
+        <div class="bf-section-title">제품</div>
+        <div class="bf-field">
+          <label class="bf-label">제품명</label>
+          <input id="bf_product" class="bf-input" type="text" placeholder="제품명"/>
+        </div>
+      </div>
+
+      <div class="bf-section">
+        <div class="bf-section-title">핵심 소구점 (5개)</div>
+        <div class="bf-field"><label class="bf-label">소구점 1</label><input id="bf_point1" class="bf-input" type="text" placeholder="가장 강력한 셀링 포인트"/></div>
+        <div class="bf-field"><label class="bf-label">소구점 2</label><input id="bf_point2" class="bf-input" type="text"/></div>
+        <div class="bf-field"><label class="bf-label">소구점 3</label><input id="bf_point3" class="bf-input" type="text"/></div>
+        <div class="bf-field"><label class="bf-label">소구점 4</label><input id="bf_point4" class="bf-input" type="text"/></div>
+        <div class="bf-field"><label class="bf-label">소구점 5</label><input id="bf_point5" class="bf-input" type="text"/></div>
+      </div>
+
+      <div class="bf-section">
+        <div class="bf-section-title">타겟 고객</div>
+        <div class="bf-field"><label class="bf-label">연령/성별</label><input id="bf_age" class="bf-input" type="text" placeholder="예: 30~40대 여성"/></div>
+        <div class="bf-field"><label class="bf-label">구매 상황</label><input id="bf_situation" class="bf-input" type="text" placeholder="예: 신차 구매 후 / 이사 후"/></div>
+        <div class="bf-field"><label class="bf-label">페인 포인트</label><input id="bf_pain" class="bf-input" type="text" placeholder="고객이 겪는 불편"/></div>
+      </div>
+
+      <div class="bf-section">
+        <div class="bf-section-title">가격 정보</div>
+        <div class="bf-field"><label class="bf-label">판매가 (원)</label><input id="bf_price" class="bf-input" type="text" placeholder="예: 29900"/></div>
+      </div>
+
+      <div class="bf-section">
+        <div class="bf-section-title">판매 채널</div>
+        <div class="bf-checks">
+          <label class="bf-check"><input id="bf_ch_smart" type="checkbox" onchange="toggleCpaField()"/>스마트스토어</label>
+          <div id="bf_cpaWrap" class="bf-cpa">
+            <label class="bf-label">CPA 목표 (원)</label>
+            <input id="bf_cpa" class="bf-input" type="text" placeholder="예: 15000"/>
+          </div>
+          <label class="bf-check"><input id="bf_ch_coupang" type="checkbox"/>쿠팡</label>
+          <label class="bf-check"><input id="bf_ch_own" type="checkbox"/>자사몰</label>
+        </div>
+      </div>
+
+      <div class="bf-section">
+        <div class="bf-section-title">보유 이미지</div>
+        <div class="bf-checks">
+          <label class="bf-check"><input id="bf_img_front" type="checkbox"/>정면 컷</label>
+          <label class="bf-check"><input id="bf_img_scene" type="checkbox"/>사용장면 컷</label>
+          <label class="bf-check"><input id="bf_img_pkg" type="checkbox"/>패키지 컷</label>
+        </div>
+      </div>
+
+      <div class="bf-section">
+        <div class="bf-section-title">참고사항</div>
+        <div class="bf-field"><label class="bf-label">경쟁 제품</label><input id="bf_competitor" class="bf-input" type="text"/></div>
+        <div class="bf-field"><label class="bf-label">강조 금지</label><input id="bf_avoid" class="bf-input" type="text"/></div>
+        <div class="bf-field"><label class="bf-label">특이사항</label><input id="bf_note" class="bf-input" type="text"/></div>
+      </div>
+
+    </div>
+    <div class="bf-foot">
+      <button class="bf-btn bf-btn-copy" onclick="copyBrief(this)">📋 클립보드에 복사</button>
+      <button class="bf-btn bf-btn-save" onclick="saveBrief()">💾 파일로 저장</button>
     </div>
   </div>
 </div>
@@ -769,6 +875,91 @@ function copyText(btn){
     btn.textContent='✓ 복사됨';
     setTimeout(()=>btn.textContent='복사',1600);
   });
+}
+
+// ═══════════════════════════════════════
+//  BRIEF.MD 작성 폼
+// ═══════════════════════════════════════
+function openBriefForm(){
+  // 현재 선택된 제품명 자동 채움
+  const pn=document.getElementById('productName');
+  document.getElementById('bf_product').value=(pn&&pn.value.trim())||'';
+  toggleCpaField();
+  document.getElementById('briefModal').style.display='flex';
+}
+function closeBriefForm(){
+  document.getElementById('briefModal').style.display='none';
+}
+function toggleCpaField(){
+  const on=document.getElementById('bf_ch_smart').checked;
+  document.getElementById('bf_cpaWrap').style.display=on?'block':'none';
+}
+
+function buildBriefMarkdown(){
+  const v=id=>{const el=document.getElementById(id);return el?el.value.trim():'';};
+  const c=id=>{const el=document.getElementById(id);return el?el.checked:false;};
+  const box=(b,label)=>`- [${b?'x':' '}] ${label}`;
+
+  const name=v('bf_product')||'[제품명]';
+  const smart=c('bf_ch_smart');
+  const cpa=v('bf_cpa');
+  const smartLine=smart?`- [x] 스마트스토어 (CPA 목표: ${cpa}원)`:'- [ ] 스마트스토어';
+
+  return `# ${name} 상세페이지 기획 브리프
+
+## 핵심 소구점 (5개)
+1. ${v('bf_point1')}
+2. ${v('bf_point2')}
+3. ${v('bf_point3')}
+4. ${v('bf_point4')}
+5. ${v('bf_point5')}
+
+## 타겟 고객
+- 연령/성별: ${v('bf_age')}
+- 구매 상황: ${v('bf_situation')}
+- 페인 포인트: ${v('bf_pain')}
+
+## 가격 정보
+- 판매가: ${v('bf_price')}원
+
+## 판매 채널
+${smartLine}
+${box(c('bf_ch_coupang'),'쿠팡')}
+${box(c('bf_ch_own'),'자사몰')}
+
+## 보유 이미지
+- 정면 컷: ${c('bf_img_front')?'Y':'N'}
+- 사용장면 컷: ${c('bf_img_scene')?'Y':'N'}
+- 패키지 컷: ${c('bf_img_pkg')?'Y':'N'}
+
+## 참고사항
+- 경쟁 제품: ${v('bf_competitor')}
+- 강조 금지: ${v('bf_avoid')}
+- 특이사항: ${v('bf_note')}
+`;
+}
+
+function copyBrief(btn){
+  const md=buildBriefMarkdown();
+  navigator.clipboard.writeText(md).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent='✓ 복사됨';
+    setTimeout(()=>btn.textContent=orig,1600);
+  });
+}
+
+function saveBrief(){
+  const md=buildBriefMarkdown();
+  const name=(document.getElementById('bf_product').value.trim())||'brief';
+  const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`${name}_brief.md`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function showTab(tab,btn){
