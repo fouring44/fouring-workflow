@@ -150,6 +150,19 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .who-a{background:#0f1a25;color:var(--b2);}
 .who-s{background:#1a2520;color:var(--g2);}
 
+/* 역할 필터 탭 (콘텐츠 영역) */
+.role-filter{display:flex;gap:10px;padding-bottom:18px;margin-bottom:28px;border-bottom:1px solid var(--border);}
+.rf-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:15px 18px;border-radius:10px;border:1px solid var(--border2);background:var(--surface);color:var(--text2);font-size:14px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .15s;}
+.rf-btn:hover{border-color:var(--text3);color:var(--text);}
+.rf-btn .rf-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.rf-p .rf-dot{background:var(--p);}
+.rf-d .rf-dot{background:var(--o);}
+.rf-btn.rf-all.active{background:var(--surface2);color:var(--text);border-color:var(--text3);}
+.rf-btn.rf-p.active{background:var(--p);border-color:var(--p);color:#fff;}
+.rf-btn.rf-d.active{background:var(--o);border-color:var(--o);color:#fff;}
+.rf-btn.active .rf-dot{background:#fff;}
+@media(max-width:720px){.role-filter{flex-direction:column;}.rf-btn{padding:13px;}}
+
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
@@ -217,19 +230,17 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
       <a class="nav-item" href="#step7" onclick="setActive(this)"><div class="nav-dot s7n" id="nd7"></div><div class="nav-num">07</div><div class="nav-title">채널 변환·완료</div><div class="nav-cnt" id="nc7"></div></a>
       <button class="reset-small" onclick="resetAll()">전체 초기화</button>
     </div>
-    <div class="ws-section">
-      <div class="ws-label">역할</div>
-      <div style="display:flex;flex-direction:column;gap:5px;">
-        <div style="display:flex;align-items:center;gap:7px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--p);flex-shrink:0;"></div><div style="font-size:11px;color:var(--text2);">기획자 (민지홍)</div></div>
-        <div style="display:flex;align-items:center;gap:7px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--o);flex-shrink:0;"></div><div style="font-size:11px;color:var(--text2);">디자이너 (민지현)</div></div>
-        <div style="display:flex;align-items:center;gap:7px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--b);flex-shrink:0;"></div><div style="font-size:11px;color:var(--text2);">Claude AI</div></div>
-        <div style="display:flex;align-items:center;gap:7px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--g);flex-shrink:0;"></div><div style="font-size:11px;color:var(--text2);">자동 스크립트</div></div>
-      </div>
-    </div>
   </div>
 
   <!-- Content -->
   <div class="wf-content">
+
+    <!-- 역할 필터 -->
+    <div class="role-filter">
+      <button class="rf-btn rf-all active" onclick="filterRole('all',this)">전체보기</button>
+      <button class="rf-btn rf-p" onclick="filterRole('p',this)"><span class="rf-dot"></span>기획자 (민지홍)</button>
+      <button class="rf-btn rf-d" onclick="filterRole('d',this)"><span class="rf-dot"></span>디자이너 (민지현)</button>
+    </div>
 
     <!-- STEP 1 -->
     <div class="step-section" id="step1">
@@ -765,6 +776,44 @@ function showTab(tab,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+tab).classList.add('active');
   btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════
+//  ROLE FILTER (기획자 / 디자이너 / 전체)
+// ═══════════════════════════════════════
+let currentRole='all';
+
+function filterRole(role,btn){
+  currentRole=role;
+  document.querySelectorAll('.rf-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  applyRoleFilter();
+}
+
+function applyRoleFilter(){
+  document.querySelectorAll('.step-section').forEach(sec=>{
+    let visible=0;
+    sec.querySelectorAll('.ci').forEach(ci=>{
+      const who=ci.querySelector('.who');
+      let show=true;
+      if(currentRole!=='all'){
+        const isBoth=who&&who.classList.contains('who-b'); // "둘 다" — 두 역할 모두 표시
+        if(currentRole==='p') show=isBoth||(who&&who.classList.contains('who-p'));
+        else if(currentRole==='d') show=isBoth||(who&&who.classList.contains('who-d'));
+      }
+      ci.style.display=show?'':'none'; // display만 변경 — 체크 상태 유지
+      if(show) visible++;
+    });
+    // 보이는 항목이 0개면 STEP 섹션 전체 숨김
+    sec.style.display=visible?'':'none';
+  });
+  // 양쪽 STEP이 모두 보일 때만 구분선 표시
+  document.querySelectorAll('.step-divider').forEach(d=>{
+    const prev=d.previousElementSibling, next=d.nextElementSibling;
+    const pv=prev&&prev.classList.contains('step-section')&&prev.style.display!=='none';
+    const nv=next&&next.classList.contains('step-section')&&next.style.display!=='none';
+    d.style.display=(pv&&nv)?'':'none';
+  });
 }
 
 // scroll spy
