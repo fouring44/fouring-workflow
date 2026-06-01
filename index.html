@@ -753,18 +753,45 @@ const TOTAL_CHECKS=Object.values(TC).reduce((a,b)=>a+b,0); // 27
 const STEP_NAMES={1:'디자이너 입력',2:'AI 기획안',3:'기획 컨펌',4:'이미지 생성',5:'전체 톤',6:'섹션 추출',7:'채널 변환'};
 
 // ═══════════════════════════════════════
-//  PRODUCT LIST (localStorage key: fw_products)
-//  각 제품: { id, name, createdAt, checks:{} }
+//  PRODUCT LIST (저장: Cloudflare KV Worker, 폴백: localStorage fw_products)
+//  각 제품: { id, name, createdAt, checks:{} }  ← checks(체크 상태)도 함께 저장됨
 // ═══════════════════════════════════════
 let products=[]; // [{id,name,createdAt,checks}]
 let activeProductId=null;
+const PRODUCTS_API='https://fouring-preview-worker.minjee041.workers.dev/products';
+let _productsSaveTimer=null;
 
-function loadProducts(){
-  try{ products=JSON.parse(localStorage.getItem('fw_products')||'[]'); }
-  catch(e){ products=[]; }
+// 서버(KV)에서 불러오기 — 실패 시 localStorage 폴백, 서버 비었고 로컬 있으면 마이그레이션
+async function loadProducts(){
+  let server=null;
+  try{
+    const res=await fetch(PRODUCTS_API);
+    if(res.ok){ const d=await res.json(); server=Array.isArray(d)?d:((d&&d.products)||[]); }
+  }catch(e){ /* 네트워크 실패 */ }
+  let local=[];
+  try{ local=JSON.parse(localStorage.getItem('fw_products')||'[]'); }catch(_){ local=[]; }
+
+  if(server===null){
+    products=local;                          // 서버 실패 → 로컬 폴백
+  }else if(server.length===0 && local.length>0){
+    products=local;                          // 서버 비었고 로컬 데이터 있음 → 마이그레이션
+    pushProductsToServer();
+  }else{
+    products=server;                         // 서버 데이터 사용
+    try{ localStorage.setItem('fw_products',JSON.stringify(products)); }catch(_){}
+  }
 }
+
+// 저장: 즉시 로컬 캐시(폴백) + 서버 POST(디바운스 1초)
 function saveProducts(){
-  localStorage.setItem('fw_products',JSON.stringify(products));
+  try{ localStorage.setItem('fw_products',JSON.stringify(products)); }catch(e){}
+  clearTimeout(_productsSaveTimer);
+  _productsSaveTimer=setTimeout(pushProductsToServer,1000);
+}
+async function pushProductsToServer(){
+  try{
+    await fetch(PRODUCTS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(products)});
+  }catch(e){ /* 실패 → localStorage 폴백 유지 */ }
 }
 function getProduct(id){ return products.find(p=>p.id===id); }
 
@@ -1536,16 +1563,20 @@ window.addEventListener('scroll',()=>{
 // ═══════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════
-loadProducts();
-// auto-select last active product
-if(products.length){
-  const lastId=localStorage.getItem('fw_last_product');
-  activeProductId=(lastId&&getProduct(lastId))?lastId:products[0].id;
-  loadActiveProduct();
-}
-renderProductList();
+// 사이드바 로딩 표시
+(function(){ const l=document.getElementById('productList'); if(l){ l.style.display='block'; l.innerHTML='<div style="font-size:12px;color:var(--text3);padding:14px;text-align:center;">⏳ 불러오는 중...</div>'; } })();
 
-// save last active on change
+(async function initProducts(){
+  await loadProducts();                       // 서버에서 제품 목록 로드
+  if(products.length){
+    const lastId=localStorage.getItem('fw_last_product');
+    activeProductId=(lastId&&getProduct(lastId))?lastId:products[0].id;
+    loadActiveProduct();
+  }
+  renderProductList();
+})();
+
+// save last active on change (기기별 UI 상태 → localStorage 유지)
 setInterval(()=>{
   if(activeProductId) localStorage.setItem('fw_last_product',activeProductId);
 },2000);
