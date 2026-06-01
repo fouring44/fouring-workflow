@@ -188,6 +188,20 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 
   <!-- Sidebar -->
   <div class="wf-sidebar">
+    <!-- ── 제품 관리 ── -->
+    <div class="ws-section">
+      <div class="ws-label">제품 관리</div>
+      <div id="activeProductLabel" style="font-size:12px;color:var(--text);font-weight:500;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">선택된 제품 없음</div>
+      <button onclick="openAddProduct()" style="width:100%;background:var(--o);color:#fff;border:none;border-radius:6px;padding:7px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;font-weight:500;margin-bottom:8px;">+ 새 제품</button>
+      <!-- 제품 없을 때 -->
+      <div id="emptyState" style="display:none;text-align:center;padding:14px 8px;background:var(--surface2);border:1px dashed var(--border2);border-radius:8px;font-size:11px;color:var(--text3);line-height:1.6;">진행 중인 제품이 없어요.<br>+ 새 제품으로 등록하세요.</div>
+      <!-- 제품 목록 -->
+      <div id="productList" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <!-- 선택 삭제 -->
+      <div id="deleteHint" style="display:none;margin-top:8px;">
+        <button onclick="deleteSelected()" style="width:100%;background:var(--r);color:#fff;border:none;border-radius:6px;padding:6px;font-size:11px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;">선택 삭제</button>
+      </div>
+    </div>
     <div class="ws-section">
       <div class="ws-label">제품명</div>
       <input class="product-input-small" type="text" id="productName" placeholder="예: 비스포크 주차번호판" oninput="saveProduct()"/>
@@ -443,6 +457,18 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 </div>
 </div>
 
+<!-- ── 새 제품 추가 모달 ── -->
+<div id="addModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;" onclick="if(event.target===this)closeAddProduct()">
+  <div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:28px;width:90%;max-width:380px;">
+    <div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:16px;">새 제품 추가</div>
+    <input id="newProductInput" type="text" placeholder="제품명 입력 (예: 비스포크 주차번호판)" onkeydown="if(event.key==='Enter')confirmAddProduct()" style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:10px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:18px;"/>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="closeAddProduct()" style="background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:6px;padding:8px 18px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;">취소</button>
+      <button onclick="confirmAddProduct()" style="background:var(--o);color:#fff;border:none;border-radius:6px;padding:8px 18px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;font-weight:500;">추가</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══════════════════════════════════════
 //  CONSTANTS
@@ -491,7 +517,15 @@ function renderProductList(){
   const list=document.getElementById('productList');
   const empty=document.getElementById('emptyState');
   const hint=document.getElementById('deleteHint');
-  if(!list||!empty||!hint) return; // 세팅 가이드 탭 제거됨 — 제품 목록 UI 없음
+  const label=document.getElementById('activeProductLabel');
+  if(!list||!empty||!hint) return;
+
+  // 현재 작업 중인 제품명 표시
+  if(label){
+    const act=getProduct(activeProductId);
+    label.textContent=act?act.name:'선택된 제품 없음';
+    label.style.color=act?'var(--text)':'var(--text3)';
+  }
 
   if(!products.length){
     empty.style.display='block';
@@ -501,56 +535,40 @@ function renderProductList(){
   }
   empty.style.display='none';
   list.style.display='flex';
-
-  // 항상 hint 표시 (제품 있으면)
-  hint.style.display=products.length?'flex':'none';
+  hint.style.display='block';
 
   list.innerHTML='';
   products.forEach(p=>{
-    const {done,total,pct}=getProductProgress(p);
-    const stepName=getCurrentStepName(p);
+    const {pct}=getProductProgress(p);
     const isComplete=pct===100;
     const isActive=p.id===activeProductId;
-    const isInProgress=pct>0&&!isComplete;
+    const inProgress=pct>0&&!isComplete;
 
-    // step indicator dots
-    let dots='';
-    for(let s=1;s<=7;s++){
-      let stepDone=0;
-      for(let i=0;i<TC[s];i++) if(p.checks[`s${s}_${i}`]) stepDone++;
-      const full=stepDone===TC[s];
-      const partial=stepDone>0&&!full;
-      const color=full?getStepColor(s):(partial?getStepColor(s)+'88':'var(--border2)');
-      dots+=`<div title="STEP 0${s}: ${STEP_NAMES[s]}" style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;transition:background .2s;"></div>`;
-    }
+    // 상태 배지: 완료 / 진행 중(경고)
+    const badge=isComplete
+      ?`<span style="font-size:9px;font-family:'DM Mono',monospace;padding:1px 5px;border-radius:3px;background:#1a2520;color:var(--g2);border:1px solid var(--g);flex-shrink:0;">완료</span>`
+      :(inProgress?`<span title="진행 중인 제품 — 삭제 시 데이터가 모두 사라집니다" style="font-size:11px;color:var(--y);flex-shrink:0;">⚠</span>`:'');
 
-    // 경고 아이콘 — 미완료 제품
-    const warnIcon=(!isComplete&&pct>0)?`<span title="진행 중인 제품 — 삭제 시 데이터가 모두 사라집니다" style="font-size:12px;color:var(--y);margin-left:2px;">⚠</span>`:'';
-
-    const card=document.createElement('div');
-    card.style.cssText=`background:var(--surface);border:1px solid ${isActive?'var(--o)':isComplete?'var(--g)':'var(--border)'};border-radius:10px;padding:16px 18px;transition:border-color .2s;`;
-    card.innerHTML=`
-      <div style="display:flex;align-items:center;gap:12px;">
-        <input type="checkbox" class="del-check" data-id="${p.id}" data-complete="${isComplete}"
-          style="width:16px;height:16px;cursor:pointer;accent-color:${isComplete?'var(--r)':'var(--y)'};flex-shrink:0;"
-          onclick="updateDeleteHint()"/>
-        <div style="flex:1;min-width:0;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
-            <div style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
-            ${isComplete?'<span style="font-size:10px;font-family:\'DM Mono\',monospace;padding:2px 7px;border-radius:3px;background:#1a2520;color:var(--g2);border:1px solid var(--g);">완료</span>':''}
-            ${isActive?'<span style="font-size:10px;font-family:\'DM Mono\',monospace;padding:2px 7px;border-radius:3px;background:#2a1a10;color:var(--o2);border:1px solid var(--o);">작업중</span>':''}
-          </div>
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <div style="flex:1;height:4px;background:var(--border2);border-radius:2px;overflow:hidden;">
-              <div style="height:100%;width:${pct}%;background:${isComplete?'var(--g)':'linear-gradient(90deg,var(--o),var(--p))'};border-radius:2px;transition:width .4s;"></div>
-            </div>
-            <div style="font-size:11px;font-family:'DM Mono',monospace;color:${isComplete?'var(--g2)':'var(--text2)'};min-width:60px;text-align:right;">${pct}% · ${isComplete?'완료':stepName}</div>
-          </div>
-          <div style="display:flex;gap:5px;align-items:center;">${dots}</div>
+    const item=document.createElement('div');
+    item.style.cssText=`display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:6px;border:1px solid ${isActive?'var(--o)':isComplete?'var(--g)':'var(--border2)'};background:${isActive?'#2a1a10':'var(--surface2)'};transition:border-color .2s;`;
+    item.innerHTML=`
+      <input type="checkbox" class="del-check" data-id="${p.id}" data-complete="${isComplete}"
+        onclick="event.stopPropagation();updateDeleteHint()"
+        style="width:13px;height:13px;flex-shrink:0;cursor:pointer;accent-color:${isComplete?'var(--r)':'var(--y)'};"/>
+      <div onclick="selectProduct('${p.id}')" style="flex:1;min-width:0;cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:5px;">
+          <span style="font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;">${p.name}</span>
+          ${isActive?'<span style="font-size:9px;font-family:\'DM Mono\',monospace;padding:1px 5px;border-radius:3px;background:#2a1a10;color:var(--o2);border:1px solid var(--o);flex-shrink:0;">작업중</span>':''}
+          ${badge}
         </div>
-        <button onclick="selectProduct('${p.id}')" style="background:${isActive?'var(--o)':'var(--surface2)'};color:${isActive?'#fff':'var(--text2)'};border:1px solid ${isActive?'var(--o)':'var(--border2)'};border-radius:6px;padding:7px 14px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0;">${isActive?'작업중':'선택'}</button>
+        <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+          <div style="flex:1;height:3px;background:var(--border2);border-radius:2px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${isComplete?'var(--g)':'linear-gradient(90deg,var(--o),var(--p))'};border-radius:2px;transition:width .4s;"></div>
+          </div>
+          <span style="font-size:9px;font-family:'DM Mono',monospace;color:var(--text3);min-width:26px;text-align:right;">${pct}%</span>
+        </div>
       </div>`;
-    list.appendChild(card);
+    list.appendChild(item);
   });
 }
 
@@ -628,8 +646,8 @@ function selectProduct(id){
   activeProductId=id;
   loadActiveProduct();
   renderProductList();
-  // switch to workflow tab
-  showTab('workflow', document.querySelectorAll('.tab-btn')[1]);
+  // 워크플로우 탭 활성화 (단일 탭)
+  showTab('workflow', document.querySelector('.tab-btn'));
 }
 
 function loadActiveProduct(){
@@ -668,7 +686,7 @@ function saveProduct(){
 
 function toggle(el,s){
   if(!activeProductId){
-    alert('선택된 제품이 없어요. 진행 상황을 저장하려면 제품이 필요합니다.');
+    if(confirm('선택된 제품이 없어요. 진행 상황을 저장하려면 제품이 필요합니다.\n\n지금 새 제품을 추가할까요?')) openAddProduct();
     return;
   }
   const items=document.getElementById('cl'+s).querySelectorAll('.ci');
