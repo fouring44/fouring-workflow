@@ -172,325 +172,18 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 <!-- TAB BAR -->
 <div class="tab-bar">
   <div class="tab-logo">FOURING</div>
-  <button class="tab-btn active" onclick="showTab('setup',this)">세팅 가이드</button>
-  <button class="tab-btn" onclick="showTab('workflow',this)">워크플로우</button>
+  <button class="tab-btn active" onclick="showTab('workflow',this)">워크플로우</button>
   <div class="tab-progress">
     <div class="pb"><div class="pf" id="progressFill" style="width:0%"></div></div>
     <div class="pt" id="progressText">0/0</div>
   </div>
 </div>
 
-<!-- ════════════════════════════════════════
-     PAGE 1: SETUP GUIDE
-════════════════════════════════════════ -->
-<div class="page active" id="page-setup">
-<div class="setup-wrap">
-
-  <!-- ── 제품 대시보드 ── -->
-  <div class="setup-section">
-    <div class="setup-section-title" style="justify-content:space-between;align-items:center;">
-      <div style="display:flex;align-items:center;gap:10px;">
-        <span class="step-num-badge" style="background:var(--b);">작업 현황</span>
-        작업 중인 제품 목록
-      </div>
-      <button onclick="openAddProduct()" style="background:var(--o);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:5px;">+ 제품 추가</button>
-    </div>
-
-    <!-- 제품 없을 때 -->
-    <div id="emptyState" style="text-align:center;padding:40px 20px;background:var(--surface);border:1px dashed var(--border2);border-radius:10px;display:none;">
-      <div style="font-size:28px;margin-bottom:12px;">📦</div>
-      <div style="font-size:14px;color:var(--text2);margin-bottom:6px;">진행 중인 제품이 없어요</div>
-      <div style="font-size:12px;color:var(--text3);">+ 제품 추가 버튼을 눌러 새 제품을 등록하세요</div>
-    </div>
-
-    <!-- 제품 카드 목록 -->
-    <div id="productList" style="display:flex;flex-direction:column;gap:10px;"></div>
-
-    <!-- 삭제 안내 -->
-    <div id="deleteHint" style="display:none;margin-top:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
-      <div style="font-size:12px;color:var(--text2);">완료된 제품을 선택해서 삭제할 수 있어요. 삭제 후 복구 불가</div>
-      <button onclick="deleteSelected()" style="background:var(--r);color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;">선택 삭제</button>
-    </div>
-  </div>
-
-  <!-- 제품 추가 모달 -->
-  <div id="addModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;">
-    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:28px 28px 24px;width:400px;max-width:90vw;">
-      <div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:6px;">새 제품 추가</div>
-      <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">워크플로우 탭에서 해당 제품을 선택해 작업을 진행하세요</div>
-      <input id="newProductInput" type="text" placeholder="제품명 입력 (예: 비스포크 주차번호판)"
-        style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:9px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:16px;"
-        onkeydown="if(event.key==='Enter')confirmAddProduct()"/>
-      <div style="display:flex;gap:8px;justify-content:flex-end;">
-        <button onclick="closeAddProduct()" style="background:transparent;border:1px solid var(--border2);border-radius:6px;padding:7px 16px;font-size:13px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;">취소</button>
-        <button onclick="confirmAddProduct()" style="background:var(--o);color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;font-weight:500;">추가</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECTION A: 전체 구조 -->
-  <div class="setup-section">
-    <div class="setup-section-title">
-      <span class="step-num-badge">A</span>
-      전체 시스템 구조
-    </div>
-    <div class="card">
-      <div class="card-title">
-        어떻게 동작하나요?
-      </div>
-      <div class="card-desc" style="margin-bottom:12px;">이 HTML 파일 하나를 GitHub에 올리고 Cloudflare Pages에 연결하면, 고정 URL이 생겨서 기획자·디자이너 누구든 어디서나 접근할 수 있어요. 광고 대시보드처럼요.</div>
-      <div class="code-block" style="font-size:13px;color:var(--text2);">
-GitHub (코드 저장)  →  Cloudflare Pages (무료 호스팅)
-         ↓                        ↓
-  git push 1번           URL 자동 업데이트
-  
-접근 방법:  https://fouring-workflow.pages.dev
-            (어디서나, PC·모바일·태블릿)
-      </div>
-    </div>
-    <div class="role-grid">
-      <div class="role-card">
-        <div class="role-head" style="background:#201a35;">
-          <div class="role-head-title" style="color:var(--p2);">기획자 (민지홍)</div>
-          <div class="role-head-sub" style="color:var(--p);">방향 결정 · 컨펌 · 품질 관리</div>
-        </div>
-        <div class="role-body">
-          <div class="role-item"><div class="role-dot" style="background:var(--p)"></div>brief.md 작성 및 Drive 업로드</div>
-          <div class="role-item"><div class="role-dot" style="background:var(--p)"></div>Claude로 기획안 생성 · 컨펌</div>
-          <div class="role-item"><div class="role-dot" style="background:var(--p)"></div>이미지 · 톤 · 최종 결과물 컨펌</div>
-          <div class="role-item"><div class="role-dot" style="background:var(--p)"></div>채널 업로드 승인</div>
-        </div>
-      </div>
-      <div class="role-card">
-        <div class="role-head" style="background:#2a1a10;">
-          <div class="role-head-title" style="color:var(--o2);">디자이너 (민지현)</div>
-          <div class="role-head-sub" style="color:var(--o);">제작 실행 · 이미지 · 시각화</div>
-        </div>
-        <div class="role-body">
-          <div class="role-item"><div class="role-dot" style="background:var(--o)"></div>제품 이미지 정리 · Drive 업로드</div>
-          <div class="role-item"><div class="role-dot" style="background:var(--o)"></div>Midjourney 이미지 생성 · 보정</div>
-          <div class="role-item"><div class="role-dot" style="background:var(--o)"></div>Claude Design 제작 · PNG 추출</div>
-          <div class="role-item"><div class="role-dot" style="background:var(--o)"></div>채널 변환 스크립트 실행</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECTION B: GitHub 세팅 -->
-  <div class="setup-section">
-    <div class="setup-section-title">
-      <span class="step-num-badge">B</span>
-      GitHub 저장소 세팅
-    </div>
-    <div class="deploy-steps">
-      <div class="deploy-step">
-        <div class="deploy-step-num">1</div>
-        <div class="deploy-step-body">
-          <div class="deploy-step-title">GitHub 저장소 생성</div>
-          <div class="deploy-step-desc">github.com 접속 → New repository → 이름: <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px;">fouring-workflow</code> → Public → Create</div>
-        </div>
-      </div>
-      <div class="deploy-step">
-        <div class="deploy-step-num">2</div>
-        <div class="deploy-step-body">
-          <div class="deploy-step-title">이 HTML 파일 업로드</div>
-          <div class="deploy-step-desc">저장소 페이지에서 "uploading an existing file" 클릭 → <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px;">fouring_workflow_app.html</code> 파일을 <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px;">index.html</code>로 이름 바꿔서 업로드 → Commit changes</div>
-        </div>
-      </div>
-    </div>
-    <div class="tip-box">💡 이후 파일 수정이 필요할 때 GitHub에서 직접 편집하거나, Claude Code로 수정 후 git push하면 자동으로 반영돼요</div>
-  </div>
-
-  <!-- SECTION C: Cloudflare 세팅 -->
-  <div class="setup-section">
-    <div class="setup-section-title">
-      <span class="step-num-badge">C</span>
-      Cloudflare Pages 배포 (무료)
-    </div>
-    <div class="deploy-steps">
-      <div class="deploy-step">
-        <div class="deploy-step-num">1</div>
-        <div class="deploy-step-body">
-          <div class="deploy-step-title">Cloudflare 접속</div>
-          <div class="deploy-step-desc">pages.cloudflare.com → 로그인 (없으면 무료 가입)</div>
-        </div>
-      </div>
-      <div class="deploy-step">
-        <div class="deploy-step-num">2</div>
-        <div class="deploy-step-body">
-          <div class="deploy-step-title">GitHub 연결</div>
-          <div class="deploy-step-desc">Workers & Pages → Create → Pages → Connect to Git → GitHub 계정 연결 → fouring-workflow 저장소 선택</div>
-        </div>
-      </div>
-      <div class="deploy-step">
-        <div class="deploy-step-num">3</div>
-        <div class="deploy-step-body">
-          <div class="deploy-step-title">빌드 설정</div>
-          <div class="deploy-step-desc">Framework preset: <strong>None</strong> · Build command: <strong>비워두기</strong> · Build output directory: <strong>/ (슬래시)</strong> → Save and Deploy</div>
-        </div>
-      </div>
-      <div class="deploy-step">
-        <div class="deploy-step-num">4</div>
-        <div class="deploy-step-body">
-          <div class="deploy-step-title">URL 확인 및 공유</div>
-          <div class="deploy-step-desc">배포 완료 후 <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px;">https://fouring-workflow.pages.dev</code> 생성 → 디자이너에게 URL 공유</div>
-        </div>
-      </div>
-    </div>
-    <div class="info-box">ℹ️ 이후 GitHub에 파일을 업데이트하면 1~2분 안에 URL에 자동 반영돼요. 별도 작업 불필요</div>
-  </div>
-
-  <!-- SECTION D: Google Drive 폴더 구조 -->
-  <div class="setup-section">
-    <div class="setup-section-title">
-      <span class="step-num-badge">D</span>
-      Google Drive 공유 폴더 구조
-    </div>
-    <div class="card">
-      <div class="card-title">지금 바로 만들어야 할 폴더</div>
-      <div class="card-desc" style="margin-bottom:12px;">기획자가 아래 구조로 폴더를 만들고, 디자이너 Gmail을 <strong>편집자</strong>로 공유해요.</div>
-      <div class="folder-tree">
-<span class="ft-root">📁 훠링-상세페이지/</span>　　　　　　　　<span class="ft-shared ft-comment">← 최상위 공유 폴더</span>
-<span class="ft-root">│</span>
-<span class="ft-root">├── 📁 _템플릿/</span>　　　　　　　　　　　<span class="ft-shared ft-comment">← 공통 양식 보관</span>
-<span class="ft-root">│　　　├── 📄 brief_양식.md</span>　　　　<span class="ft-planner ft-comment">← 기획자 작성</span>
-<span class="ft-root">│　　　└── 📄 채널규격_가이드.md</span>
-<span class="ft-root">│</span>
-<span class="ft-root">├── 📁 진행중/</span>　　　　　　　　　　　<span class="ft-shared ft-comment">← 작업 중인 제품</span>
-<span class="ft-root">│　　　└── 📁 [제품명]/</span>　　　　　　<span class="ft-comment">← 제품마다 복사</span>
-<span class="ft-root">│　　　　　　├── 📄 brief.md</span>　　　<span class="ft-planner ft-comment">← 기획자 작성</span>
-<span class="ft-root">│　　　　　　├── 📄 planning.md</span>　<span class="ft-planner ft-comment">← Claude 기획안 저장</span>
-<span class="ft-root">│　　　　　　├── 📁 01_images/</span>
-<span class="ft-root">│　　　　　　│　　├── 📁 original/</span>　<span class="ft-designer ft-comment">← 디자이너 업로드</span>
-<span class="ft-root">│　　　　　　│　　└── 📁 generated/</span><span class="ft-designer ft-comment">← MJ 생성 이미지</span>
-<span class="ft-root">│　　　　　　├── 📁 02_sections/</span>　　<span class="ft-designer ft-comment">← Claude Design PNG</span>
-<span class="ft-root">│　　　　　　└── 📁 03_output/</span>
-<span class="ft-root">│　　　　　　　　　├── 📁 smartstore/</span><span class="ft-output ft-comment">← 860px 변환본</span>
-<span class="ft-root">│　　　　　　　　　├── 📁 coupang/</span>　<span class="ft-output ft-comment">← 800px 변환본</span>
-<span class="ft-root">│　　　　　　　　　└── 📁 own_mall/</span><span class="ft-output ft-comment">← 원본 유지</span>
-<span class="ft-root">│</span>
-<span class="ft-root">└── 📁 완료/</span>　　　　　　　　　　　　<span class="ft-shared ft-comment">← 업로드 완료 제품 이동</span>
-      </div>
-    </div>
-    <div class="card" style="margin-top:12px;">
-      <div class="card-title">Drive 공유 방법</div>
-      <div class="deploy-steps" style="gap:8px;">
-        <div class="deploy-step" style="padding:10px 14px;">
-          <div class="deploy-step-num" style="width:22px;height:22px;font-size:11px;">1</div>
-          <div class="deploy-step-body">
-            <div class="deploy-step-title" style="font-size:12px;">폴더 생성</div>
-            <div class="deploy-step-desc">Google Drive → 새 폴더 → "훠링-상세페이지" 입력 후 생성</div>
-          </div>
-        </div>
-        <div class="deploy-step" style="padding:10px 14px;">
-          <div class="deploy-step-num" style="width:22px;height:22px;font-size:11px;">2</div>
-          <div class="deploy-step-body">
-            <div class="deploy-step-title" style="font-size:12px;">디자이너 공유</div>
-            <div class="deploy-step-desc">폴더 우클릭 → 공유 → 디자이너 Gmail 입력 → 편집자 권한 → 완료</div>
-          </div>
-        </div>
-        <div class="deploy-step" style="padding:10px 14px;">
-          <div class="deploy-step-num" style="width:22px;height:22px;font-size:11px;">3</div>
-          <div class="deploy-step-body">
-            <div class="deploy-step-title" style="font-size:12px;">하위 폴더 생성</div>
-            <div class="deploy-step-desc">위 구조대로 _템플릿 / 진행중 / 완료 폴더 순서로 생성</div>
-          </div>
-        </div>
-        <div class="deploy-step" style="padding:10px 14px;">
-          <div class="deploy-step-num" style="width:22px;height:22px;font-size:11px;">4</div>
-          <div class="deploy-step-body">
-            <div class="deploy-step-title" style="font-size:12px;">Drive 바로가기 즐겨찾기</div>
-            <div class="deploy-step-desc">폴더 우클릭 → 드라이브에 바로가기 추가 → 기획자·디자이너 양쪽 즐겨찾기 등록</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECTION E: brief.md 양식 -->
-  <div class="setup-section">
-    <div class="setup-section-title">
-      <span class="step-num-badge">E</span>
-      brief.md 기본 양식
-    </div>
-    <div class="card">
-      <div class="card-desc" style="margin-bottom:10px;">_템플릿 폴더에 저장해두고, 신제품마다 복사해서 사용해요.</div>
-      <div class="prompt-label">📄 brief.md 양식</div>
-      <div class="code-block">
-# [제품명] 상세페이지 기획 브리프
-
-## 핵심 소구점 (5개)
-1. 
-2. 
-3. 
-4. 
-5. 
-
-## 타겟 고객
-- 연령/성별: 
-- 구매 상황: 
-- 페인 포인트: 
-
-## 가격 정보
-- 판매가:  원
-- 할인 정보: 
-
-## 판매 채널 (해당 체크)
-- [ ] 스마트스토어  (CPA 목표:    원)
-- [ ] 쿠팡
-- [ ] 자사몰
-
-## 보유 이미지
-- 정면 컷: Y/N
-- 사용장면 컷: Y/N
-- 패키지 컷: Y/N
-
-## 참고사항
-- 경쟁 제품: 
-- 강조 금지:
-- 특이사항:
-        <button class="copy-btn" onclick="copyText(this)">복사</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- SECTION F: 협업 규칙 -->
-  <div class="setup-section">
-    <div class="setup-section-title">
-      <span class="step-num-badge">F</span>
-      협업 커뮤니케이션 규칙
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
-      <div class="card" style="border-left:3px solid var(--o);">
-        <div class="card-title">📌 파일 업로드 = 카톡 알림 필수</div>
-        <div class="card-desc">Drive에 파일 올리면 반드시 카카오톡으로 알림. 상대방이 Drive를 수시로 체크하지 않아도 됨</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--p);">
-        <div class="card-title">💬 피드백은 Drive 파일 댓글로</div>
-        <div class="card-desc">이미지나 PNG 파일에 직접 댓글 달기. 구두 전달 X → Drive 댓글로 히스토리 남기기</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--g);">
-        <div class="card-title">✅ 컨펌은 명확하게</div>
-        <div class="card-desc">"좋아요" X → "기획 컨펌, 이미지 작업 시작해도 됩니다" O<br>단계별 컨펌 메시지가 명확해야 디자이너가 다음 단계 진행 가능</div>
-      </div>
-      <div class="card" style="border-left:3px solid var(--y);">
-        <div class="card-title">📋 planning.md가 단일 기준</div>
-        <div class="card-desc">기획안·카피·이미지 목록·MJ 프롬프트 전부 이 파일 하나에. 수정사항도 여기 업데이트 후 알림</div>
-      </div>
-    </div>
-  </div>
-
-  <div style="text-align:center;padding-top:20px;">
-    <button onclick="showTab('workflow',document.querySelectorAll('.tab-btn')[1])" style="background:var(--o);color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:14px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;font-weight:500;">워크플로우 시작하기 →</button>
-  </div>
-
-</div>
-</div>
 
 <!-- ════════════════════════════════════════
      PAGE 2: WORKFLOW CHECKLIST
 ════════════════════════════════════════ -->
-<div class="page" id="page-workflow">
+<div class="page active" id="page-workflow">
 <div class="wf-layout">
 
   <!-- Sidebar -->
@@ -798,6 +491,7 @@ function renderProductList(){
   const list=document.getElementById('productList');
   const empty=document.getElementById('emptyState');
   const hint=document.getElementById('deleteHint');
+  if(!list||!empty||!hint) return; // 세팅 가이드 탭 제거됨 — 제품 목록 UI 없음
 
   if(!products.length){
     empty.style.display='block';
@@ -974,10 +668,7 @@ function saveProduct(){
 
 function toggle(el,s){
   if(!activeProductId){
-    // no product selected — prompt
-    if(!confirm('제품을 먼저 선택하거나 추가해주세요.\n\n세팅 가이드 탭에서 제품을 추가할 수 있어요.\n\n지금 추가하시겠어요?')) return;
-    showTab('setup', document.querySelectorAll('.tab-btn')[0]);
-    openAddProduct();
+    alert('선택된 제품이 없어요. 진행 상황을 저장하려면 제품이 필요합니다.');
     return;
   }
   const items=document.getElementById('cl'+s).querySelectorAll('.ci');
@@ -1056,7 +747,6 @@ function showTab(tab,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+tab).classList.add('active');
   btn.classList.add('active');
-  if(tab==='setup') renderProductList();
 }
 
 // scroll spy
