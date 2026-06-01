@@ -266,11 +266,12 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
   .pv-main{flex-direction:column;}
   .pv-slots-col{flex:none;max-width:100%;width:100%;}
   .wf-sidebar{display:none;}        /* 사이드바 숨김 → 모바일 제품 바로 대체 */
-  .m-product-bar{display:flex;}
 }
 
 /* 모바일 제품 선택 바 + 슬라이드업 모달 */
-.m-product-bar{display:none;align-items:center;justify-content:space-between;gap:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:16px;}
+/* mobile-first: 기본 표시(flex), 데스크탑에서만 숨김 — 소스 순서로 인한 display:none 덮어쓰기 버그 방지 */
+.m-product-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--o);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:16px;} /* TODO: background:var(--o)는 디버깅용 임시 — 확인 후 var(--surface2)로 복구 */
+@media(min-width:769px){ .m-product-bar{display:none;} }
 .m-product-name{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
 .m-product-change{flex-shrink:0;background:var(--o);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
 .m-modal-overlay{display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.6);align-items:flex-end;justify-content:center;}
