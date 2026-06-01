@@ -206,6 +206,40 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .mj-card-title{font-size:12px;font-weight:500;color:var(--text);margin-bottom:5px;}
 .mj-card .code-block{margin:0;white-space:pre-wrap;word-break:break-word;}
 
+/* 상세페이지 미리보기 탭 */
+.pv-wrap{max-width:1100px;margin:0 auto;padding:28px 24px 80px;}
+.pv-controls h1{font-size:22px;font-weight:500;color:var(--text);margin-bottom:6px;}
+.pv-controls p{font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;}
+.pv-ctrl-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.pv-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text);border-radius:8px;padding:10px 18px;font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .15s;}
+.pv-btn:hover{border-color:var(--text3);}
+.pv-btn-primary{background:var(--o);border-color:var(--o);color:#fff;}
+.pv-btn-primary:hover{filter:brightness(1.08);}
+.pv-count{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-left:auto;}
+.pv-thumbs-section{margin:22px 0;display:none;}
+.pv-section-label{font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:10px;}
+.pv-thumbs{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;}
+.pv-thumb{position:relative;flex-shrink:0;width:112px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px;cursor:grab;transition:border-color .15s,opacity .15s;}
+.pv-thumb:hover{border-color:var(--o);}
+.pv-thumb.pv-dragging{opacity:.4;}
+.pv-thumb.pv-over{border-color:var(--o);border-style:dashed;}
+.pv-thumb img{width:100%;height:84px;object-fit:cover;border-radius:4px;display:block;background:#fff;}
+.pv-thumb-num{position:absolute;top:5px;left:5px;background:var(--o);color:#fff;font-size:10px;font-family:'DM Mono',monospace;min-width:18px;height:18px;padding:0 4px;border-radius:9px;display:flex;align-items:center;justify-content:center;z-index:2;}
+.pv-thumb-del{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;line-height:1;cursor:pointer;z-index:2;}
+.pv-thumb-del:hover{background:var(--r);}
+.pv-thumb-name{font-size:10px;color:var(--text2);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pv-thumb-ctrl{display:flex;gap:4px;margin-top:6px;}
+.pv-thumb-ctrl button{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:4px;font-size:11px;cursor:pointer;padding:3px 0;transition:border-color .15s;}
+.pv-thumb-ctrl button:hover{border-color:var(--o);}
+.pv-width-opts{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 14px;}
+.pv-w-btn{background:var(--surface);border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .15s;}
+.pv-w-btn:hover{color:var(--text2);border-color:var(--border2);}
+.pv-w-btn.active{background:var(--o);border-color:var(--o);color:#fff;}
+.pv-stage{display:flex;justify-content:center;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:24px;overflow-x:auto;}
+.pv-preview{width:100%;background:#fff;border-radius:4px;overflow:hidden;}
+.pv-preview .pv-img{display:block;width:100%;}
+.pv-empty{padding:70px 20px;text-align:center;color:#999;font-size:13px;}
+
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
@@ -229,6 +263,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 <div class="tab-bar">
   <div class="tab-logo">FOURING</div>
   <button class="tab-btn active" onclick="showTab('workflow',this)">워크플로우</button>
+  <button class="tab-btn" onclick="showTab('preview',this)">상세페이지 미리보기</button>
   <div class="tab-progress">
     <div class="pb"><div class="pf" id="progressFill" style="width:0%"></div></div>
     <div class="pt" id="progressText">0/0</div>
@@ -558,6 +593,40 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 
   </div>
 </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 3: 상세페이지 미리보기
+════════════════════════════════════════ -->
+<div class="page" id="page-preview">
+  <div class="pv-wrap">
+    <div class="pv-controls">
+      <h1>상세페이지 미리보기</h1>
+      <p>이미지를 업로드하면 실제 상세페이지처럼 순서대로 이어서 보여줍니다</p>
+      <div class="pv-ctrl-row">
+        <button class="pv-btn pv-btn-primary" onclick="document.getElementById('pvFileInput').click()">📂 이미지 업로드</button>
+        <input type="file" id="pvFileInput" accept="image/png,image/jpeg" multiple style="display:none" onchange="pvAddFiles(event)"/>
+        <button class="pv-btn" onclick="pvClearAll()">🗑️ 전체 초기화</button>
+        <span class="pv-count" id="pvCount">0장 업로드됨</span>
+      </div>
+    </div>
+
+    <div class="pv-thumbs-section" id="pvThumbsSection">
+      <div class="pv-section-label">이미지 순서 조정 — 드래그하거나 ⬆️ ⬇️ 버튼으로 변경</div>
+      <div class="pv-thumbs" id="pvThumbs"></div>
+    </div>
+
+    <div class="pv-width-opts">
+      <button class="pv-w-btn active" onclick="pvSetWidth('full',this)">전체폭</button>
+      <button class="pv-w-btn" onclick="pvSetWidth('860',this)">860px (스마트스토어)</button>
+      <button class="pv-w-btn" onclick="pvSetWidth('800',this)">800px (쿠팡)</button>
+      <button class="pv-w-btn" onclick="pvSetWidth('375',this)">375px (모바일)</button>
+    </div>
+
+    <div class="pv-stage">
+      <div class="pv-preview" id="pvPreview"><div class="pv-empty">이미지를 업로드하면 여기에 상세페이지처럼 표시됩니다</div></div>
+    </div>
+  </div>
 </div>
 
 <!-- ── 새 제품 추가 모달 ── -->
@@ -1096,6 +1165,93 @@ function renderMjCards(items,errMsg){
       <div class="mj-card-title">${mjEsc(it.title)}</div>
       <div class="code-block">${mjEsc(it.prompt)}<button class="copy-btn" onclick="event.stopPropagation();copyText(this)">복사</button></div>
     </div>`).join('');
+}
+
+// ═══════════════════════════════════════
+//  상세페이지 미리보기 탭
+// ═══════════════════════════════════════
+let pvImages=[];      // {id, name, url}
+let pvIdSeq=0;
+let pvDragIndex=null;
+let pvWidth='full';
+
+function pvEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function pvAddFiles(ev){
+  const files=Array.from(ev.target.files||[]).filter(f=>/^image\/(png|jpeg)$/.test(f.type)||/\.(png|jpe?g)$/i.test(f.name));
+  files.forEach(f=>{
+    const item={id:'pv'+(pvIdSeq++),name:f.name,url:''};
+    pvImages.push(item);                              // 선택 순서 보존
+    const reader=new FileReader();
+    reader.onload=e=>{ item.url=e.target.result; pvRender(); };
+    reader.readAsDataURL(f);
+  });
+  ev.target.value='';                                 // 같은 파일 재선택 허용
+  pvRender();
+}
+
+function pvRemove(id){ pvImages=pvImages.filter(im=>im.id!==id); pvRender(); }
+
+function pvClearAll(){
+  if(pvImages.length && !confirm('업로드된 이미지를 모두 삭제할까요?')) return;
+  pvImages=[]; pvRender();
+}
+
+function pvMove(i,dir){
+  const j=i+dir;
+  if(j<0||j>=pvImages.length) return;
+  const t=pvImages[i]; pvImages[i]=pvImages[j]; pvImages[j]=t;
+  pvRender();
+}
+
+// 드래그 & 드롭 순서 변경
+function pvDragStart(i,el){ pvDragIndex=i; el.classList.add('pv-dragging'); }
+function pvDragEnd(el){ el.classList.remove('pv-dragging'); document.querySelectorAll('.pv-thumb.pv-over').forEach(t=>t.classList.remove('pv-over')); }
+function pvDragOver(ev,el){ ev.preventDefault(); el.classList.add('pv-over'); }
+function pvDragLeave(el){ el.classList.remove('pv-over'); }
+function pvDrop(j){
+  if(pvDragIndex===null||pvDragIndex===j) return;
+  const [it]=pvImages.splice(pvDragIndex,1);
+  pvImages.splice(j,0,it);
+  pvDragIndex=null;
+  pvRender();
+}
+
+function pvSetWidth(w,btn){
+  pvWidth=w;
+  document.querySelectorAll('.pv-w-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const pv=document.getElementById('pvPreview');
+  pv.style.width = (w==='full') ? '100%' : (w+'px');
+}
+
+function pvRender(){
+  document.getElementById('pvCount').textContent=pvImages.length+'장 업로드됨';
+  const section=document.getElementById('pvThumbsSection');
+  const thumbs=document.getElementById('pvThumbs');
+  const pv=document.getElementById('pvPreview');
+  if(!pvImages.length){
+    section.style.display='none';
+    thumbs.innerHTML='';
+    pv.innerHTML='<div class="pv-empty">이미지를 업로드하면 여기에 상세페이지처럼 표시됩니다</div>';
+    return;
+  }
+  section.style.display='block';
+  thumbs.innerHTML=pvImages.map((im,i)=>`
+    <div class="pv-thumb" draggable="true"
+      ondragstart="pvDragStart(${i},this)" ondragend="pvDragEnd(this)"
+      ondragover="pvDragOver(event,this)" ondragleave="pvDragLeave(this)" ondrop="pvDrop(${i})">
+      <div class="pv-thumb-num">${i+1}</div>
+      <button class="pv-thumb-del" onclick="pvRemove('${im.id}')" title="삭제">✕</button>
+      <img src="${im.url}" alt="" title="${pvEsc(im.name)}" draggable="false"/>
+      <div class="pv-thumb-name" title="${pvEsc(im.name)}">${pvEsc(im.name)}</div>
+      <div class="pv-thumb-ctrl">
+        <button onclick="pvMove(${i},-1)" title="앞으로">⬆️</button>
+        <button onclick="pvMove(${i},1)" title="뒤로">⬇️</button>
+      </div>
+    </div>`).join('');
+  pv.innerHTML=pvImages.map(im=>`<img class="pv-img" src="${im.url}" alt="" title="${pvEsc(im.name)}"/>`).join('');
+  pv.style.width = (pvWidth==='full') ? '100%' : (pvWidth+'px');   // 폭 유지
 }
 
 // ═══════════════════════════════════════
