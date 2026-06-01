@@ -193,6 +193,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .bf-btn-save{background:var(--o);color:#fff;}
 .bf-btn-save:hover{filter:brightness(1.1);}
 
+/* 태스크 카드 프롬프트 복사 버튼 (STEP 03) */
+.prompt-copy-row{display:flex;justify-content:flex-end;margin-top:12px;}
+.prompt-copy-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;padding:7px 14px;font-size:12px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .15s;}
+.prompt-copy-btn:hover{border-color:var(--b);color:var(--b2);}
+
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
@@ -391,16 +396,17 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
         <div class="tool-tag" style="border-color:var(--b);color:var(--b2);"><div class="tdot" style="background:var(--b)"></div>Claude 수정</div>
       </div>
       <div class="checklist" id="cl3">
-        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb30">　</div><div class="ci-body"><div class="ci-text">섹션 구성 검토</div><div class="ci-desc">히어로→특장점→사용장면→CTA 순서가 이 제품에 맞는지 확인. 순서 변경 필요 시 Claude에 요청</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb30">　</div><div class="ci-body"><div class="ci-text">섹션 구성 검토</div><div class="ci-desc">히어로→특장점→사용장면→CTA 순서가 이 제품에 맞는지 확인. 순서 변경 필요 시 Claude에 요청</div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t1')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
         <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb31">　</div><div class="ci-body">
           <div class="ci-text">카피 수정 및 확정</div>
           <div class="ci-desc">헤드카피·본문 문구 검토. 수정 필요 시 프롬프트 활용</div>
           <div class="prompt-wrap"><div class="prompt-label">💬 수정 프롬프트 예시</div>
           <div class="prompt-box">"특장점 섹션 카피를 더 감성적으로. 30대 여성이 공감할 수 있는 톤으로"
 "히어로 헤드카피를 쿠팡 버전으로. 더 직접적이고 혜택 중심으로"<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
+          <div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t2')">프롬프트 복사</button></div>
         </div><div class="who who-p">기획자 (민지홍)</div></div>
-        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb32">　</div><div class="ci-body"><div class="ci-text">이미지 목록 확정</div><div class="ci-desc">보유/AI생성필요/촬영필요 분류 확인. MJ 프롬프트 방향 검토</div></div><div class="who who-p">기획자 (민지홍)</div></div>
-        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb33">　</div><div class="ci-body"><div class="ci-text">planning.md 최종 업데이트 후 디자이너 알림</div><div class="ci-desc">수정 반영 후 파일 업데이트. 카톡: "기획 확정! planning.md 확인 후 이미지 작업 시작해줘요"</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb32">　</div><div class="ci-body"><div class="ci-text">이미지 목록 확정</div><div class="ci-desc">보유/AI생성필요/촬영필요 분류 확인. MJ 프롬프트 방향 검토</div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t3')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb33">　</div><div class="ci-body"><div class="ci-text">planning.md 최종 업데이트 후 디자이너 알림</div><div class="ci-desc">수정 반영 후 파일 업데이트. 카톡: "기획 확정! planning.md 확인 후 이미지 작업 시작해줘요"</div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t4')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
       </div>
       <div class="sc s3b" id="sc3">✓ STEP 03 완료 — 이미지 생성으로</div>
     </div>
@@ -915,6 +921,38 @@ function copyText(btn){
   navigator.clipboard.writeText(text).then(()=>{
     btn.textContent='✓ 복사됨';
     setTimeout(()=>btn.textContent='복사',1600);
+  });
+}
+
+// ═══════════════════════════════════════
+//  태스크별 Claude 프롬프트 복사 (STEP 03)
+// ═══════════════════════════════════════
+const TASK_PROMPTS={
+  t1:`[planning.md 파일 경로]의 기획안을 읽고,
+전환율 관점에서 섹션 구성을 점검해줘.
+히어로→특장점→사용장면→CTA 순서가 구매 결정 흐름에 맞는지,
+순서 변경/보완/제거가 필요한 섹션이 있는지 알려줘.
+출력 형식: 유지 / 순서변경 / 보완필요 / 제거가능`,
+  t2:`[planning.md 파일 경로]의 헤드카피를 전환율 관점에서 점검하고
+각 섹션별로 2개 버전으로 개선안을 써줘.
+버전A: 감성적 톤, 선물·기분전환 상황 중심
+버전B: 직접적 톤, 혜택·당일발송 중심 (쿠팡용)
+각 버전 끝에 적합한 채널/상황 한 줄 설명 추가.`,
+  t3:`[planning.md 파일 경로]의 이미지 목록을 전환율 관점에서 점검해줘.
+전환율 임팩트 높은 순서로 우선순위를 정리하고,
+Midjourney 프롬프트 중 수정이 필요한 것은 개선안도 함께 써줘.`,
+  t4:`지금까지 검토한 내용을 모두 반영해서 planning.md를 업데이트하고 저장해줘.
+저장 완료 후 아래 메시지를 출력해줘:
+"기획 확정! planning.md 확인 후 이미지 작업 시작해줘요"`,
+};
+
+function copyPrompt(btn,key){
+  const text=TASK_PROMPTS[key];
+  if(!text) return;
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.textContent;
+    btn.textContent='복사됨 ✓';
+    setTimeout(()=>btn.textContent=orig,1600);
   });
 }
 
