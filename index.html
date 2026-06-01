@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>훠링 상세페이지 워크플로우</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0f0f0f;--surface:#181818;--surface2:#222;--border:#2a2a2a;--border2:#333;
+  --text:#f0ede8;--text2:#9a9690;--text3:#5a5856;
+  --p:#8b7ff0;--p2:#c4bef8;--o:#e07a45;--o2:#f5b990;
+  --g:#5aad7a;--g2:#9dd4b0;--y:#d4a53a;--y2:#f0cc80;
+  --b:#4a8fd4;--b2:#7ab8e8;--pk:#c45a90;--r:#c45a5a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-serif;font-weight:300;min-height:100vh;}
+
+/* ─── TAB NAV ─── */
+.tab-bar{background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 0 0 20px;position:sticky;top:0;z-index:200;}
+.tab-logo{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;color:var(--o);letter-spacing:.1em;padding:16px 20px 16px 0;border-right:1px solid var(--border);margin-right:4px;}
+.tab-btn{padding:16px 18px;font-size:13px;font-weight:400;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;background:transparent;border-top:none;border-left:none;border-right:none;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;}
+.tab-btn:hover{color:var(--text2);}
+.tab-btn.active{color:var(--text);border-bottom-color:var(--o);}
+.tab-progress{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 24px;}
+.pb{width:120px;height:3px;background:var(--border2);border-radius:2px;overflow:hidden;}
+.pf{height:100%;background:linear-gradient(90deg,var(--o),var(--p));border-radius:2px;transition:width .4s;}
+.pt{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;min-width:44px;}
+
+/* ─── PAGES ─── */
+.page{display:none;}.page.active{display:block;}
+
+/* ═══════════════════════════════
+   PAGE 1 : SETUP GUIDE
+═══════════════════════════════ */
+.setup-wrap{max-width:860px;margin:0 auto;padding:40px 32px 80px;}
+.setup-hero{text-align:center;padding:48px 0 40px;border-bottom:1px solid var(--border);margin-bottom:40px;}
+.setup-hero h1{font-size:28px;font-weight:500;margin-bottom:10px;}
+.setup-hero p{font-size:14px;color:var(--text2);line-height:1.7;}
+.setup-badge{display:inline-block;font-size:11px;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:4px;margin:4px 3px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);}
+
+.setup-section{margin-bottom:40px;}
+.setup-section-title{font-size:16px;font-weight:500;color:var(--text);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.step-num-badge{font-size:11px;font-family:'DM Mono',monospace;padding:2px 9px;border-radius:4px;background:var(--o);color:#fff;font-weight:500;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px 22px;margin-bottom:12px;}
+.card-title{font-size:14px;font-weight:500;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.card-desc{font-size:13px;color:var(--text2);line-height:1.7;}
+.card-tag{font-size:10px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:3px;border:1px solid;font-weight:500;}
+
+.code-block{background:#0a0a0a;border:1px solid var(--border);border-radius:8px;padding:14px 16px;font-family:'DM Mono',monospace;font-size:12px;color:#8b9e6e;line-height:1.8;position:relative;margin:10px 0;}
+.code-block .copy-btn{position:absolute;top:8px;right:8px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:3px 8px;font-size:10px;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s;}
+.code-block .copy-btn:hover{color:var(--text);border-color:var(--text3);}
+
+.folder-tree{background:#0a0a0a;border:1px solid var(--border);border-radius:8px;padding:16px 18px;font-family:'DM Mono',monospace;font-size:12px;line-height:2;margin:10px 0;}
+.ft-root{color:var(--text2);}
+.ft-shared{color:var(--g2);}
+.ft-planner{color:var(--p2);}
+.ft-designer{color:var(--o2);}
+.ft-output{color:var(--y2);}
+.ft-comment{color:var(--text3);font-size:11px;}
+
+.tip-box{background:var(--surface2);border-left:3px solid var(--o);border-radius:0 8px 8px 0;padding:12px 16px;font-size:13px;color:var(--text2);line-height:1.6;margin:12px 0;}
+.info-box{background:var(--surface2);border-left:3px solid var(--b);border-radius:0 8px 8px 0;padding:12px 16px;font-size:13px;color:var(--text2);line-height:1.6;margin:12px 0;}
+
+.deploy-steps{display:flex;flex-direction:column;gap:10px;}
+.deploy-step{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;}
+.deploy-step-num{width:26px;height:26px;border-radius:50%;background:var(--o);color:#fff;font-size:12px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'DM Mono',monospace;}
+.deploy-step-body{flex:1;}
+.deploy-step-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px;}
+.deploy-step-desc{font-size:12px;color:var(--text2);line-height:1.6;}
+
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.role-card{border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.role-head{padding:12px 16px;}
+.role-head-title{font-size:13px;font-weight:500;margin-bottom:3px;}
+.role-head-sub{font-size:11px;opacity:.8;}
+.role-body{background:var(--surface);padding:12px 16px;}
+.role-item{font-size:12px;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+.role-item:last-child{border-bottom:none;}
+.role-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
+
+/* ═══════════════════════════════
+   PAGE 2 : WORKFLOW CHECKLIST
+═══════════════════════════════ */
+.wf-layout{display:flex;min-height:calc(100vh - 49px);}
+.wf-sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:20px 0;position:sticky;top:49px;height:calc(100vh - 49px);overflow-y:auto;flex-shrink:0;}
+.ws-section{padding:0 16px;margin-bottom:20px;}
+.ws-label{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.12em;color:var(--text3);text-transform:uppercase;margin-bottom:6px;}
+.product-input-small{background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:6px 10px;color:var(--text);font-size:12px;font-family:'Noto Sans KR',sans-serif;width:100%;outline:none;transition:border-color .2s;}
+.product-input-small:focus{border-color:var(--o);}
+.product-input-small::placeholder{color:var(--text3);}
+.nav-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:6px;cursor:pointer;transition:background .15s;margin-bottom:1px;text-decoration:none;}
+.nav-item:hover{background:var(--surface2);}
+.nav-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;border:1.5px solid;}
+.nav-num{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);min-width:18px;}
+.nav-title{font-size:12px;color:var(--text2);flex:1;}
+.nav-cnt{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);}
+.reset-small{width:100%;background:transparent;border:1px solid var(--border2);border-radius:6px;padding:6px;font-size:11px;color:var(--text3);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:all .2s;margin-top:6px;}
+.reset-small:hover{border-color:var(--r);color:var(--r);}
+
+.wf-content{flex:1;padding:28px 36px;max-width:800px;}
+.step-section{margin-bottom:44px;scroll-margin-top:60px;}
+.step-hdr{display:flex;align-items:flex-start;gap:14px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.step-badge{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:.08em;padding:4px 10px;border-radius:4px;font-weight:500;flex-shrink:0;margin-top:2px;}
+.step-info{flex:1;}
+.step-title{font-size:17px;font-weight:500;margin-bottom:4px;}
+.step-sub{font-size:12px;color:var(--text2);line-height:1.5;}
+.step-meta{display:flex;align-items:center;gap:8px;margin-top:7px;flex-wrap:wrap;}
+.meta-tag{font-size:10px;padding:2px 8px;border-radius:3px;font-family:'DM Mono',monospace;border:1px solid;}
+
+.checklist{display:flex;flex-direction:column;gap:5px;}
+.ci{display:flex;align-items:flex-start;gap:10px;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;user-select:none;}
+.ci:hover{border-color:var(--border2);background:var(--surface2);}
+.ci.checked{opacity:.45;}
+.ci.checked .ci-text{text-decoration:line-through;color:var(--text3);}
+.checkbox{width:17px;height:17px;border-radius:4px;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;transition:all .15s;font-size:10px;color:#fff;}
+.ci-body{flex:1;}
+.ci-text{font-size:13px;color:var(--text);font-weight:400;line-height:1.5;margin-bottom:2px;}
+.ci-desc{font-size:11px;color:var(--text3);line-height:1.4;}
+.who{font-size:10px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:3px;flex-shrink:0;margin-top:1px;font-weight:500;}
+
+.prompt-wrap{margin:8px 0 2px;}
+.prompt-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);letter-spacing:.08em;margin-bottom:4px;text-transform:uppercase;}
+.prompt-box{background:#0a0a0a;border:1px solid var(--border);border-radius:6px;padding:11px 14px;font-family:'DM Mono',monospace;font-size:11px;color:#8b9e6e;line-height:1.7;position:relative;}
+.copy-btn{position:absolute;top:7px;right:7px;background:var(--surface2);border:1px solid var(--border2);border-radius:3px;padding:2px 7px;font-size:10px;color:var(--text3);cursor:pointer;font-family:'DM Mono',monospace;transition:all .15s;}
+.copy-btn:hover{color:var(--text);}
+
+.sc{display:none;align-items:center;gap:6px;font-size:11px;font-family:'DM Mono',monospace;margin-top:10px;}
+.sc.show{display:flex;}
+.step-divider{height:1px;background:var(--border);margin:36px 0;}
+
+.complete-banner{background:linear-gradient(135deg,#0d1f0d,#0d0d1f);border:1px solid var(--g);border-radius:12px;padding:28px;text-align:center;margin-top:36px;display:none;}
+.complete-banner.show{display:block;}
+.complete-banner h2{font-size:20px;font-weight:500;color:var(--g2);margin:12px 0 8px;}
+.complete-banner p{font-size:13px;color:var(--text2);}
+
+/* colors */
+.s1{background:#1a2520;color:var(--g2);}  .s1b{border-color:var(--g);color:var(--g);}  .s1n{border-color:var(--g);}  .s1cb{background:var(--g);}
+.s2{background:#201a35;color:var(--p2);}  .s2b{border-color:var(--p);color:var(--p);}  .s2n{border-color:var(--p);}  .s2cb{background:var(--p);}
+.s3{background:#2a1f10;color:var(--y2);}  .s3b{border-color:var(--y);color:var(--y);}  .s3n{border-color:var(--y);}  .s3cb{background:var(--y);}
+.s4{background:#2a1525;color:var(--pk);}  .s4b{border-color:var(--pk);color:var(--pk);} .s4n{border-color:var(--pk);} .s4cb{background:var(--pk);}
+.s5{background:#2a1a10;color:var(--o2);}  .s5b{border-color:var(--o);color:var(--o);}  .s5n{border-color:var(--o);}  .s5cb{background:var(--o);}
+.s6{background:#102030;color:var(--b2);}  .s6b{border-color:var(--b);color:var(--b);}  .s6n{border-color:var(--b);}  .s6cb{background:var(--b);}
+.s7{background:#1a2520;color:var(--g2);}  .s7b{border-color:var(--g);color:var(--g);}  .s7n{border-color:var(--g);}  .s7cb{background:var(--g);}
+
+.who-p{background:#201a35;color:var(--p2);}
+.who-d{background:#2a1a10;color:var(--o2);}
+.who-b{background:#1a2520;color:var(--g2);}
+.who-a{background:#0f1a25;color:var(--b2);}
+.who-s{background:#1a2520;color:var(--g2);}
+
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+.tools-row{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 14px;}
+.tool-tag{font-size:11px;padding:3px 9px;border-radius:4px;font-family:'DM Mono',monospace;border:1px solid;display:flex;align-items:center;gap:4px;}
+.tdot{width:5px;height:5px;border-radius:50%;}
+
+@media(max-width:680px){
+  .wf-sidebar{display:none;}
+  .setup-wrap{padding:24px 16px 60px;}
+  .wf-content{padding:20px 16px;}
+  .role-grid{grid-template-columns:1fr;}
+  .tab-progress{display:none;}
+}
+</style>
+</head>
+<body>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="tab-logo">FOURING</div>
+  <button class="tab-btn active" onclick="showTab('setup',this)">세팅 가이드</button>
+  <button class="tab-btn" onclick="showTab('workflow',this)">워크플로우</button>
+  <div class="tab-progress">
+    <div class="pb"><div class="pf" id="progressFill" style="width:0%"></div></div>
+    <div class="pt" id="progressText">0/0</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 1: SETUP GUIDE
+════════════════════════════════════════ -->
+<div class="page active" id="page-setup">
+<div class="setup-wrap">
+
+  <!-- ── 제품 대시보드 ── -->
+  <div class="setup-section">
+    <div class="setup-section-title" style="justify-content:space-between;align-items:center;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span class="step-num-badge" style="background:var(--b);">작업 현황</span>
+        작업 중인 제품 목록
+      </div>
+      <button onclick="openAddProduct()" style="background:var(--o);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;font-weight:500;display:flex;align-items:center;gap:5px;">+ 제품 추가</button>
+    </div>
+
+    <!-- 제품 없을 때 -->
+    <div id="emptyState" style="text-align:center;padding:40px 20px;background:var(--surface);border:1px dashed var(--border2);border-radius:10px;display:none;">
+      <div style="font-size:28px;margin-bottom:12px;">📦</div>
+      <div style="font-size:14px;color:var(--text2);margin-bottom:6px;">진행 중인 제품이 없어요</div>
+      <div style="font-size:12px;color:var(--text3);">+ 제품 추가 버튼을 눌러 새 제품을 등록하세요</div>
+    </div>
+
+    <!-- 제품 카드 목록 -->
+    <div id="productList" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+    <!-- 삭제 안내 -->
+    <div id="deleteHint" style="display:none;margin-top:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;">
+      <div style="font-size:12px;color:var(--text2);">완료된 제품을 선택해서 삭제할 수 있어요. 삭제 후 복구 불가</div>
+      <button onclick="deleteSelected()" style="background:var(--r);color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;">선택 삭제</button>
+    </div>
+  </div>
+
+  <!-- 제품 추가 모달 -->
+  <div id="addModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:center;justify-content:center;">
+    <div style="background:var(--surface);border:1px solid var(--border2);border-radius:12px;padding:28px 28px 24px;width:400px;max-width:90vw;">
+      <div style="font-size:16px;font-weight:500;color:var(--text);margin-bottom:6px;">새 제품 추가</div>
+      <div style="font-size:12px;color:var(--text3);margin-bottom:16px;">워크플로우 탭에서 해당 제품을 선택해 작업을 진행하세요</div>
+      <input id="newProductInput" type="text" placeholder="제품명 입력 (예: 비스포크 주차번호판)"
+        style="width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;padding:9px 12px;color:var(--text);font-size:13px;font-family:'Noto Sans KR',sans-serif;outline:none;margin-bottom:16px;"
+        onkeydown="if(event.key==='Enter')confirmAddProduct()"/>
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
+        <button onclick="closeAddProduct()" style="background:transparent;border:1px solid var(--border2);border-radius:6px;padding:7px 16px;font-size:13px;color:var(--text2);cursor:pointer;font-family:'Noto Sans KR',sans-serif;">취소</button>
+        <button onclick="confirmAddProduct()" style="background:var(--o);color:#fff;border:none;border-radius:6px;padding:7px 16px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;font-weight:500;">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION A: 전체 구조 -->
+  <div class="setup-section">
+    <div class="setup-section-title">
+      <span class="step-num-badge">A</span>
+      전체 시스템 구조
+    </div>
+    <div class="card">
+      <div class="card-title">
+        어떻게 동작하나요?
+      </div>
+      <div class="card-desc" style="margin-bottom:12px;">이 HTML 파일 하나를 GitHub에 올리고 Cloudflare Pages에 연결하면, 고정 URL이 생겨서 기획자·디자이너 누구든 어디서나 접근할 수 있어요. 광고 대시보드처럼요.</div>
+      <div class="code-block" style="font-size:13px;color:var(--text2);">
+GitHub (코드 저장)  →  Cloudflare Pages (무료 호스팅)
+         ↓                        ↓
+  git push 1번           URL 자동 업데이트
+  
+접근 방법:  https://fouring-workflow.pages.dev
+            (어디서나, PC·모바일·태블릿)
+      </div>
+    </div>
+    <div class="role-grid">
+      <div class="role-card">
+        <div class="role-head" style="background:#201a35;">
+          <div class="role-head-title" style="color:var(--p2);">기획자 (민지홍)</div>
+          <div class="role-head-sub" style="color:var(--p);">방향 결정 · 컨펌 · 품질 관리</div>
+        </div>
+        <div class="role-body">
+          <div class="role-item"><div class="role-dot" style="background:var(--p)"></div>brief.md 작성 및 Drive 업로드</div>
+          <div class="role-item"><div class="role-dot" style="background:var(--p)"></div>Claude로 기획안 생성 · 컨펌</div>
+          <div class="role-item"><div class="role-dot" style="background:var(--p)"></div>이미지 · 톤 · 최종 결과물 컨펌</div>
+          <div class="role-item"><div class="role-dot" style="background:var(--p)"></div>채널 업로드 승인</div>
+        </div>
+      </div>
+      <div class="role-card">
+        <div class="role-head" style="background:#2a1a10;">
+          <div class="role-head-title" style="color:var(--o2);">디자이너 (민지현)</div>
+          <div class="role-head-sub" style="color:var(--o);">제작 실행 · 이미지 · 시각화</div>
+        </div>
+        <div class="role-body">
+          <div class="role-item"><div class="role-dot" style="background:var(--o)"></div>제품 이미지 정리 · Drive 업로드</div>
+          <div class="role-item"><div class="role-dot" style="background:var(--o)"></div>Midjourney 이미지 생성 · 보정</div>
+          <div class="role-item"><div class="role-dot" style="background:var(--o)"></div>Claude Design 제작 · PNG 추출</div>
+          <div class="role-item"><div class="role-dot" style="background:var(--o)"></div>채널 변환 스크립트 실행</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION B: GitHub 세팅 -->
+  <div class="setup-section">
+    <div class="setup-section-title">
+      <span class="step-num-badge">B</span>
+      GitHub 저장소 세팅
+    </div>
+    <div class="deploy-steps">
+      <div class="deploy-step">
+        <div class="deploy-step-num">1</div>
+        <div class="deploy-step-body">
+          <div class="deploy-step-title">GitHub 저장소 생성</div>
+          <div class="deploy-step-desc">github.com 접속 → New repository → 이름: <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px;">fouring-workflow</code> → Public → Create</div>
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div class="deploy-step-num">2</div>
+        <div class="deploy-step-body">
+          <div class="deploy-step-title">이 HTML 파일 업로드</div>
+          <div class="deploy-step-desc">저장소 페이지에서 "uploading an existing file" 클릭 → <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px;">fouring_workflow_app.html</code> 파일을 <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px;">index.html</code>로 이름 바꿔서 업로드 → Commit changes</div>
+        </div>
+      </div>
+    </div>
+    <div class="tip-box">💡 이후 파일 수정이 필요할 때 GitHub에서 직접 편집하거나, Claude Code로 수정 후 git push하면 자동으로 반영돼요</div>
+  </div>
+
+  <!-- SECTION C: Cloudflare 세팅 -->
+  <div class="setup-section">
+    <div class="setup-section-title">
+      <span class="step-num-badge">C</span>
+      Cloudflare Pages 배포 (무료)
+    </div>
+    <div class="deploy-steps">
+      <div class="deploy-step">
+        <div class="deploy-step-num">1</div>
+        <div class="deploy-step-body">
+          <div class="deploy-step-title">Cloudflare 접속</div>
+          <div class="deploy-step-desc">pages.cloudflare.com → 로그인 (없으면 무료 가입)</div>
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div class="deploy-step-num">2</div>
+        <div class="deploy-step-body">
+          <div class="deploy-step-title">GitHub 연결</div>
+          <div class="deploy-step-desc">Workers & Pages → Create → Pages → Connect to Git → GitHub 계정 연결 → fouring-workflow 저장소 선택</div>
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div class="deploy-step-num">3</div>
+        <div class="deploy-step-body">
+          <div class="deploy-step-title">빌드 설정</div>
+          <div class="deploy-step-desc">Framework preset: <strong>None</strong> · Build command: <strong>비워두기</strong> · Build output directory: <strong>/ (슬래시)</strong> → Save and Deploy</div>
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div class="deploy-step-num">4</div>
+        <div class="deploy-step-body">
+          <div class="deploy-step-title">URL 확인 및 공유</div>
+          <div class="deploy-step-desc">배포 완료 후 <code style="background:var(--surface2);padding:1px 5px;border-radius:3px;font-family:'DM Mono',monospace;font-size:11px;">https://fouring-workflow.pages.dev</code> 생성 → 디자이너에게 URL 공유</div>
+        </div>
+      </div>
+    </div>
+    <div class="info-box">ℹ️ 이후 GitHub에 파일을 업데이트하면 1~2분 안에 URL에 자동 반영돼요. 별도 작업 불필요</div>
+  </div>
+
+  <!-- SECTION D: Google Drive 폴더 구조 -->
+  <div class="setup-section">
+    <div class="setup-section-title">
+      <span class="step-num-badge">D</span>
+      Google Drive 공유 폴더 구조
+    </div>
+    <div class="card">
+      <div class="card-title">지금 바로 만들어야 할 폴더</div>
+      <div class="card-desc" style="margin-bottom:12px;">기획자가 아래 구조로 폴더를 만들고, 디자이너 Gmail을 <strong>편집자</strong>로 공유해요.</div>
+      <div class="folder-tree">
+<span class="ft-root">📁 훠링-상세페이지/</span>　　　　　　　　<span class="ft-shared ft-comment">← 최상위 공유 폴더</span>
+<span class="ft-root">│</span>
+<span class="ft-root">├── 📁 _템플릿/</span>　　　　　　　　　　　<span class="ft-shared ft-comment">← 공통 양식 보관</span>
+<span class="ft-root">│　　　├── 📄 brief_양식.md</span>　　　　<span class="ft-planner ft-comment">← 기획자 작성</span>
+<span class="ft-root">│　　　└── 📄 채널규격_가이드.md</span>
+<span class="ft-root">│</span>
+<span class="ft-root">├── 📁 진행중/</span>　　　　　　　　　　　<span class="ft-shared ft-comment">← 작업 중인 제품</span>
+<span class="ft-root">│　　　└── 📁 [제품명]/</span>　　　　　　<span class="ft-comment">← 제품마다 복사</span>
+<span class="ft-root">│　　　　　　├── 📄 brief.md</span>　　　<span class="ft-planner ft-comment">← 기획자 작성</span>
+<span class="ft-root">│　　　　　　├── 📄 planning.md</span>　<span class="ft-planner ft-comment">← Claude 기획안 저장</span>
+<span class="ft-root">│　　　　　　├── 📁 01_images/</span>
+<span class="ft-root">│　　　　　　│　　├── 📁 original/</span>　<span class="ft-designer ft-comment">← 디자이너 업로드</span>
+<span class="ft-root">│　　　　　　│　　└── 📁 generated/</span><span class="ft-designer ft-comment">← MJ 생성 이미지</span>
+<span class="ft-root">│　　　　　　├── 📁 02_sections/</span>　　<span class="ft-designer ft-comment">← Claude Design PNG</span>
+<span class="ft-root">│　　　　　　└── 📁 03_output/</span>
+<span class="ft-root">│　　　　　　　　　├── 📁 smartstore/</span><span class="ft-output ft-comment">← 860px 변환본</span>
+<span class="ft-root">│　　　　　　　　　├── 📁 coupang/</span>　<span class="ft-output ft-comment">← 800px 변환본</span>
+<span class="ft-root">│　　　　　　　　　└── 📁 own_mall/</span><span class="ft-output ft-comment">← 원본 유지</span>
+<span class="ft-root">│</span>
+<span class="ft-root">└── 📁 완료/</span>　　　　　　　　　　　　<span class="ft-shared ft-comment">← 업로드 완료 제품 이동</span>
+      </div>
+    </div>
+    <div class="card" style="margin-top:12px;">
+      <div class="card-title">Drive 공유 방법</div>
+      <div class="deploy-steps" style="gap:8px;">
+        <div class="deploy-step" style="padding:10px 14px;">
+          <div class="deploy-step-num" style="width:22px;height:22px;font-size:11px;">1</div>
+          <div class="deploy-step-body">
+            <div class="deploy-step-title" style="font-size:12px;">폴더 생성</div>
+            <div class="deploy-step-desc">Google Drive → 새 폴더 → "훠링-상세페이지" 입력 후 생성</div>
+          </div>
+        </div>
+        <div class="deploy-step" style="padding:10px 14px;">
+          <div class="deploy-step-num" style="width:22px;height:22px;font-size:11px;">2</div>
+          <div class="deploy-step-body">
+            <div class="deploy-step-title" style="font-size:12px;">디자이너 공유</div>
+            <div class="deploy-step-desc">폴더 우클릭 → 공유 → 디자이너 Gmail 입력 → 편집자 권한 → 완료</div>
+          </div>
+        </div>
+        <div class="deploy-step" style="padding:10px 14px;">
+          <div class="deploy-step-num" style="width:22px;height:22px;font-size:11px;">3</div>
+          <div class="deploy-step-body">
+            <div class="deploy-step-title" style="font-size:12px;">하위 폴더 생성</div>
+            <div class="deploy-step-desc">위 구조대로 _템플릿 / 진행중 / 완료 폴더 순서로 생성</div>
+          </div>
+        </div>
+        <div class="deploy-step" style="padding:10px 14px;">
+          <div class="deploy-step-num" style="width:22px;height:22px;font-size:11px;">4</div>
+          <div class="deploy-step-body">
+            <div class="deploy-step-title" style="font-size:12px;">Drive 바로가기 즐겨찾기</div>
+            <div class="deploy-step-desc">폴더 우클릭 → 드라이브에 바로가기 추가 → 기획자·디자이너 양쪽 즐겨찾기 등록</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION E: brief.md 양식 -->
+  <div class="setup-section">
+    <div class="setup-section-title">
+      <span class="step-num-badge">E</span>
+      brief.md 기본 양식
+    </div>
+    <div class="card">
+      <div class="card-desc" style="margin-bottom:10px;">_템플릿 폴더에 저장해두고, 신제품마다 복사해서 사용해요.</div>
+      <div class="prompt-label">📄 brief.md 양식</div>
+      <div class="code-block">
+# [제품명] 상세페이지 기획 브리프
+
+## 핵심 소구점 (5개)
+1. 
+2. 
+3. 
+4. 
+5. 
+
+## 타겟 고객
+- 연령/성별: 
+- 구매 상황: 
+- 페인 포인트: 
+
+## 가격 정보
+- 판매가:  원
+- 할인 정보: 
+
+## 판매 채널 (해당 체크)
+- [ ] 스마트스토어  (CPA 목표:    원)
+- [ ] 쿠팡
+- [ ] 자사몰
+
+## 보유 이미지
+- 정면 컷: Y/N
+- 사용장면 컷: Y/N
+- 패키지 컷: Y/N
+
+## 참고사항
+- 경쟁 제품: 
+- 강조 금지:
+- 특이사항:
+        <button class="copy-btn" onclick="copyText(this)">복사</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION F: 협업 규칙 -->
+  <div class="setup-section">
+    <div class="setup-section-title">
+      <span class="step-num-badge">F</span>
+      협업 커뮤니케이션 규칙
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <div class="card" style="border-left:3px solid var(--o);">
+        <div class="card-title">📌 파일 업로드 = 카톡 알림 필수</div>
+        <div class="card-desc">Drive에 파일 올리면 반드시 카카오톡으로 알림. 상대방이 Drive를 수시로 체크하지 않아도 됨</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--p);">
+        <div class="card-title">💬 피드백은 Drive 파일 댓글로</div>
+        <div class="card-desc">이미지나 PNG 파일에 직접 댓글 달기. 구두 전달 X → Drive 댓글로 히스토리 남기기</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--g);">
+        <div class="card-title">✅ 컨펌은 명확하게</div>
+        <div class="card-desc">"좋아요" X → "기획 컨펌, 이미지 작업 시작해도 됩니다" O<br>단계별 컨펌 메시지가 명확해야 디자이너가 다음 단계 진행 가능</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--y);">
+        <div class="card-title">📋 planning.md가 단일 기준</div>
+        <div class="card-desc">기획안·카피·이미지 목록·MJ 프롬프트 전부 이 파일 하나에. 수정사항도 여기 업데이트 후 알림</div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;padding-top:20px;">
+    <button onclick="showTab('workflow',document.querySelectorAll('.tab-btn')[1])" style="background:var(--o);color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:14px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;font-weight:500;">워크플로우 시작하기 →</button>
+  </div>
+
+</div>
+</div>
+
+<!-- ════════════════════════════════════════
+     PAGE 2: WORKFLOW CHECKLIST
+════════════════════════════════════════ -->
+<div class="page" id="page-workflow">
+<div class="wf-layout">
+
+  <!-- Sidebar -->
+  <div class="wf-sidebar">
+    <div class="ws-section">
+      <div class="ws-label">제품명</div>
+      <input class="product-input-small" type="text" id="productName" placeholder="예: 비스포크 주차번호판" oninput="saveProduct()"/>
+    </div>
+    <div class="ws-section">
+      <div class="ws-label">진행 단계</div>
+      <a class="nav-item" href="#step1" onclick="setActive(this)"><div class="nav-dot s1n" id="nd1"></div><div class="nav-num">01</div><div class="nav-title">디자이너 입력</div><div class="nav-cnt" id="nc1"></div></a>
+      <a class="nav-item" href="#step2" onclick="setActive(this)"><div class="nav-dot s2n" id="nd2"></div><div class="nav-num">02</div><div class="nav-title">AI 기획안 생성</div><div class="nav-cnt" id="nc2"></div></a>
+      <a class="nav-item" href="#step3" onclick="setActive(this)"><div class="nav-dot s3n" id="nd3"></div><div class="nav-num">03</div><div class="nav-title">기획 검토·컨펌</div><div class="nav-cnt" id="nc3"></div></a>
+      <a class="nav-item" href="#step4" onclick="setActive(this)"><div class="nav-dot s4n" id="nd4"></div><div class="nav-num">04</div><div class="nav-title">이미지 생성·튜닝</div><div class="nav-cnt" id="nc4"></div></a>
+      <a class="nav-item" href="#step5" onclick="setActive(this)"><div class="nav-dot s5n" id="nd5"></div><div class="nav-num">05</div><div class="nav-title">전체 톤 초안</div><div class="nav-cnt" id="nc5"></div></a>
+      <a class="nav-item" href="#step6" onclick="setActive(this)"><div class="nav-dot s6n" id="nd6"></div><div class="nav-num">06</div><div class="nav-title">섹션별 수정·추출</div><div class="nav-cnt" id="nc6"></div></a>
+      <a class="nav-item" href="#step7" onclick="setActive(this)"><div class="nav-dot s7n" id="nd7"></div><div class="nav-num">07</div><div class="nav-title">채널 변환·완료</div><div class="nav-cnt" id="nc7"></div></a>
+      <button class="reset-small" onclick="resetAll()">전체 초기화</button>
+    </div>
+    <div class="ws-section">
+      <div class="ws-label">역할</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">
+        <div style="display:flex;align-items:center;gap:7px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--p);flex-shrink:0;"></div><div style="font-size:11px;color:var(--text2);">기획자 (민지홍)</div></div>
+        <div style="display:flex;align-items:center;gap:7px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--o);flex-shrink:0;"></div><div style="font-size:11px;color:var(--text2);">디자이너 (민지현)</div></div>
+        <div style="display:flex;align-items:center;gap:7px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--b);flex-shrink:0;"></div><div style="font-size:11px;color:var(--text2);">Claude AI</div></div>
+        <div style="display:flex;align-items:center;gap:7px;"><div style="width:7px;height:7px;border-radius:50%;background:var(--g);flex-shrink:0;"></div><div style="font-size:11px;color:var(--text2);">자동 스크립트</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="wf-content">
+
+    <!-- STEP 1 -->
+    <div class="step-section" id="step1">
+      <div class="step-hdr">
+        <div class="step-badge s1">STEP 01</div>
+        <div class="step-info">
+          <div class="step-title">디자이너 입력</div>
+          <div class="step-sub">모든 작업의 시작. Google Drive 공유 폴더에 자료 업로드 후 기획자 알림</div>
+          <div class="step-meta"><span class="meta-tag s1b">Google Drive</span><span class="meta-tag" style="border-color:var(--text3);color:var(--text3);">⏱ 30분</span></div>
+        </div>
+      </div>
+      <div class="tools-row">
+        <div class="tool-tag" style="border-color:var(--o);color:var(--o2);"><div class="tdot" style="background:var(--o)"></div>디자이너</div>
+        <div class="tool-tag" style="border-color:var(--p);color:var(--p2);"><div class="tdot" style="background:var(--p)"></div>기획자</div>
+        <div class="tool-tag" style="border-color:var(--border2);color:var(--text3);"><div class="tdot" style="background:var(--border2)"></div>Google Drive</div>
+      </div>
+      <div class="checklist" id="cl1">
+        <div class="ci" onclick="toggle(this,1)"><div class="checkbox s1cb" id="cb10">　</div><div class="ci-body"><div class="ci-text">Drive에 제품 폴더 생성</div><div class="ci-desc">훠링-상세페이지 / 진행중 / [제품명] 폴더 및 하위 폴더 생성</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,1)"><div class="checkbox s1cb" id="cb11">　</div><div class="ci-body"><div class="ci-text">제품 이미지 원본 업로드</div><div class="ci-desc">01_images/original/ 에 PNG/JPG 전부 업로드. 파일명 정리 필수</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,1)"><div class="checkbox s1cb" id="cb12">　</div><div class="ci-body"><div class="ci-text">기획자에게 카톡 알림</div><div class="ci-desc">"[제품명] 이미지 올렸어요. brief.md 작성 부탁드려요"</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,1)"><div class="checkbox s1cb" id="cb13">　</div><div class="ci-body">
+          <div class="ci-text">brief.md 작성 및 Drive 업로드</div>
+          <div class="ci-desc">소구점 5개·타겟·가격·채널·참고사항. _템플릿/brief_양식.md 복사해서 작성</div>
+          <div class="prompt-wrap"><div class="prompt-label">📄 Claude 프롬프트 — Drive MCP 연결 시</div>
+          <div class="prompt-box">훠링-상세페이지/진행중/[제품명]/brief.md 파일 읽어줘<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
+        </div><div class="who who-p">기획자 (민지홍)</div></div>
+      </div>
+      <div class="sc s1b" id="sc1">✓ STEP 01 완료 — 기획안 생성으로</div>
+    </div>
+    <div class="step-divider"></div>
+
+    <!-- STEP 2 -->
+    <div class="step-section" id="step2">
+      <div class="step-hdr">
+        <div class="step-badge s2">STEP 02</div>
+        <div class="step-info">
+          <div class="step-title">AI 기획안 자동 생성</div>
+          <div class="step-sub">Claude.ai에 brief + 이미지 넣으면 섹션·카피·이미지 목록·MJ 프롬프트까지 자동 생성</div>
+          <div class="step-meta"><span class="meta-tag s2b">Claude.ai</span><span class="meta-tag" style="border-color:var(--text3);color:var(--text3);">⏱ 20분</span></div>
+        </div>
+      </div>
+      <div class="tools-row">
+        <div class="tool-tag" style="border-color:var(--p);color:var(--p2);"><div class="tdot" style="background:var(--p)"></div>기획자</div>
+        <div class="tool-tag" style="border-color:var(--b);color:var(--b2);"><div class="tdot" style="background:var(--b)"></div>Claude.ai</div>
+      </div>
+      <div class="checklist" id="cl2">
+        <div class="ci" onclick="toggle(this,2)"><div class="checkbox s2cb" id="cb20">　</div><div class="ci-body">
+          <div class="ci-text">Claude.ai에 brief.md + 제품 이미지 첨부 후 기획안 요청</div>
+          <div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트</div>
+          <div class="prompt-box">첨부한 brief.md와 제품 이미지를 바탕으로 상세페이지 기획안 만들어줘.
+포함 내용:
+1. 섹션 구성 (히어로/특장점/사용장면/CTA 순서와 목적)
+2. 각 섹션 헤드카피 초안 (구매전환 중심)
+3. 필요 이미지 목록 (보유/AI생성필요/촬영필요 분류)
+4. AI 생성 필요 이미지의 Midjourney 프롬프트 (영문)
+5. 채널별 톤 차이 (스마트스토어/쿠팡/자사몰)<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
+        </div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,2)"><div class="checkbox s2cb" id="cb21">　</div><div class="ci-body"><div class="ci-text">기획안 내용 planning.md에 저장 후 Drive 업로드</div><div class="ci-desc">Drive / [제품명] / planning.md 저장. 디자이너 단일 기준 파일</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+      </div>
+      <div class="sc s2b" id="sc2">✓ STEP 02 완료 — 기획 검토로</div>
+    </div>
+    <div class="step-divider"></div>
+
+    <!-- STEP 3 -->
+    <div class="step-section" id="step3">
+      <div class="step-hdr">
+        <div class="step-badge s3">STEP 03</div>
+        <div class="step-info">
+          <div class="step-title">기획안 검토 · 컨펌 ★</div>
+          <div class="step-sub">가장 중요한 단계. 여기서 방향 확정 = 이후 재작업 없음. Claude와 대화로 즉시 수정 가능</div>
+          <div class="step-meta"><span class="meta-tag s3b">★ 기획자 핵심 개입</span><span class="meta-tag" style="border-color:var(--text3);color:var(--text3);">⏱ 30~60분</span></div>
+        </div>
+      </div>
+      <div class="tools-row">
+        <div class="tool-tag" style="border-color:var(--p);color:var(--p2);"><div class="tdot" style="background:var(--p)"></div>기획자</div>
+        <div class="tool-tag" style="border-color:var(--b);color:var(--b2);"><div class="tdot" style="background:var(--b)"></div>Claude 수정</div>
+      </div>
+      <div class="checklist" id="cl3">
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb30">　</div><div class="ci-body"><div class="ci-text">섹션 구성 검토</div><div class="ci-desc">히어로→특장점→사용장면→CTA 순서가 이 제품에 맞는지 확인. 순서 변경 필요 시 Claude에 요청</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb31">　</div><div class="ci-body">
+          <div class="ci-text">카피 수정 및 확정</div>
+          <div class="ci-desc">헤드카피·본문 문구 검토. 수정 필요 시 프롬프트 활용</div>
+          <div class="prompt-wrap"><div class="prompt-label">💬 수정 프롬프트 예시</div>
+          <div class="prompt-box">"특장점 섹션 카피를 더 감성적으로. 30대 여성이 공감할 수 있는 톤으로"
+"히어로 헤드카피를 쿠팡 버전으로. 더 직접적이고 혜택 중심으로"<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
+        </div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb32">　</div><div class="ci-body"><div class="ci-text">이미지 목록 확정</div><div class="ci-desc">보유/AI생성필요/촬영필요 분류 확인. MJ 프롬프트 방향 검토</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb33">　</div><div class="ci-body"><div class="ci-text">planning.md 최종 업데이트 후 디자이너 알림</div><div class="ci-desc">수정 반영 후 파일 업데이트. 카톡: "기획 확정! planning.md 확인 후 이미지 작업 시작해줘요"</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+      </div>
+      <div class="sc s3b" id="sc3">✓ STEP 03 완료 — 이미지 생성으로</div>
+    </div>
+    <div class="step-divider"></div>
+
+    <!-- STEP 4 -->
+    <div class="step-section" id="step4">
+      <div class="step-hdr">
+        <div class="step-badge s4">STEP 04</div>
+        <div class="step-info">
+          <div class="step-title">추가 이미지 생성 · 튜닝 ★</div>
+          <div class="step-sub">Claude가 MJ 프롬프트 작성 → 디자이너 생성·보정 → 기획자 컨펌. Claude는 이미지 직접 생성 불가</div>
+          <div class="step-meta"><span class="meta-tag s4b">Midjourney</span><span class="meta-tag" style="border-color:var(--text3);color:var(--text3);">⏱ 1~3시간</span></div>
+        </div>
+      </div>
+      <div class="tools-row">
+        <div class="tool-tag" style="border-color:var(--o);color:var(--o2);"><div class="tdot" style="background:var(--o)"></div>디자이너</div>
+        <div class="tool-tag" style="border-color:var(--pk);color:var(--pk);"><div class="tdot" style="background:var(--pk)"></div>Midjourney</div>
+        <div class="tool-tag" style="border-color:var(--p);color:var(--p2);"><div class="tdot" style="background:var(--p)"></div>기획자 컨펌</div>
+      </div>
+      <div class="checklist" id="cl4">
+        <div class="ci" onclick="toggle(this,4)"><div class="checkbox s4cb" id="cb40">　</div><div class="ci-body"><div class="ci-text">planning.md에서 MJ 프롬프트 확인</div><div class="ci-desc">AI 생성 필요 이미지 목록과 각 프롬프트 복사 준비</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,4)"><div class="checkbox s4cb" id="cb41">　</div><div class="ci-body">
+          <div class="ci-text">Midjourney에서 이미지 생성</div>
+          <div class="ci-desc">프롬프트 붙여넣기 → 생성 → 마음에 드는 컷 선택 (V 변형, U 업스케일)</div>
+          <div class="prompt-wrap"><div class="prompt-label">💡 프롬프트 수정 필요 시</div>
+          <div class="prompt-box">"이미지가 너무 어두워. 밝고 깔끔한 톤으로 프롬프트 수정해줘"<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
+        </div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,4)"><div class="checkbox s4cb" id="cb42">　</div><div class="ci-body"><div class="ci-text">포토샵으로 후보정·제품 합성</div><div class="ci-desc">생성 이미지에 실제 제품 합성·색보정·브랜드 톤 맞춤</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,4)"><div class="checkbox s4cb" id="cb43">　</div><div class="ci-body"><div class="ci-text">완성 이미지 01_images/generated/ 업로드 후 기획자 알림</div><div class="ci-desc">카톡: "이미지 완성했어요. Drive에서 확인 부탁드려요"</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,4)"><div class="checkbox s4cb" id="cb44">　</div><div class="ci-body"><div class="ci-text">기획자 이미지 검토 · 컨펌</div><div class="ci-desc">Drive 댓글로 피드백. OK면 카톡: "이미지 컨펌! Claude Design 작업 시작해줘요"</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+      </div>
+      <div class="sc s4b" id="sc4">✓ STEP 04 완료 — Claude Design 시작</div>
+    </div>
+    <div class="step-divider"></div>
+
+    <!-- STEP 5 -->
+    <div class="step-section" id="step5">
+      <div class="step-hdr">
+        <div class="step-badge s5">STEP 05</div>
+        <div class="step-info">
+          <div class="step-title">Claude Design — 전체 톤 · 흐름 초안</div>
+          <div class="step-sub">섹션별 작업 전 전체 방향 한 번 컨펌. 여기서 톤 확정 = 이후 재작업 없음</div>
+          <div class="step-meta"><span class="meta-tag s5b">Claude Design</span><span class="meta-tag" style="border-color:var(--text3);color:var(--text3);">⏱ 1시간</span></div>
+        </div>
+      </div>
+      <div class="tools-row">
+        <div class="tool-tag" style="border-color:var(--o);color:var(--o2);"><div class="tdot" style="background:var(--o)"></div>디자이너</div>
+        <div class="tool-tag" style="border-color:var(--o);color:var(--o2);"><div class="tdot" style="background:var(--o)"></div>Claude Design</div>
+        <div class="tool-tag" style="border-color:var(--p);color:var(--p2);"><div class="tdot" style="background:var(--p)"></div>기획자 컨펌</div>
+      </div>
+      <div class="checklist" id="cl5">
+        <div class="ci" onclick="toggle(this,5)"><div class="checkbox s5cb" id="cb50">　</div><div class="ci-body">
+          <div class="ci-text">claude.ai/design 에서 전체 레이아웃 초안 요청</div>
+          <div class="ci-desc">planning.md 내용 + 확정 이미지 Import 후 전체 구조·분위기 확인용 초안 생성</div>
+          <div class="prompt-wrap"><div class="prompt-label">💬 Claude Design 프롬프트</div>
+          <div class="prompt-box">아래 기획안으로 상세페이지 전체 레이아웃 초안 만들어줘.
+전체 톤·컬러·섹션 흐름 확인이 목적이야.
+세부 수정은 이후 섹션별로 할 예정.
+
+[planning.md 내용 붙여넣기]<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
+        </div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,5)"><div class="checkbox s5cb" id="cb51">　</div><div class="ci-body"><div class="ci-text">전체 초안 스크린샷 → 기획자 공유</div><div class="ci-desc">카톡 or Drive에 올려서 "전체 톤 확인 부탁드려요" 알림</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,5)"><div class="checkbox s5cb" id="cb52">　</div><div class="ci-body"><div class="ci-text">기획자 전체 톤 컨펌</div><div class="ci-desc">컬러·폰트·전체 무드 확인. OK면 카톡: "톤 컨펌! 섹션별 작업 진행해줘요"</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+      </div>
+      <div class="sc s5b" id="sc5">✓ STEP 05 완료 — 섹션 작업 시작</div>
+    </div>
+    <div class="step-divider"></div>
+
+    <!-- STEP 6 -->
+    <div class="step-section" id="step6">
+      <div class="step-hdr">
+        <div class="step-badge s6">STEP 06</div>
+        <div class="step-info">
+          <div class="step-title">섹션별 세부 수정 · PNG 추출</div>
+          <div class="step-sub">섹션 단위로 쪼개서 집중 수정 → 각각 PNG 추출. 한 번에 전체 수정 X → 퀄리티 UP</div>
+          <div class="step-meta"><span class="meta-tag s6b">Claude Design</span><span class="meta-tag" style="border-color:var(--text3);color:var(--text3);">⏱ 2~3시간</span></div>
+        </div>
+      </div>
+      <div class="tools-row">
+        <div class="tool-tag" style="border-color:var(--b);color:var(--b2);"><div class="tdot" style="background:var(--b)"></div>Claude Design</div>
+        <div class="tool-tag" style="border-color:var(--o);color:var(--o2);"><div class="tdot" style="background:var(--o)"></div>디자이너</div>
+      </div>
+      <div class="checklist" id="cl6">
+        <div class="ci" onclick="toggle(this,6)"><div class="checkbox s6cb" id="cb60">　</div><div class="ci-body"><div class="ci-text">히어로 섹션 수정 완료 → PNG 추출</div><div class="ci-desc">메인 이미지 + 헤드카피. 02_sections/01_hero.png 저장</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,6)"><div class="checkbox s6cb" id="cb61">　</div><div class="ci-body"><div class="ci-text">특장점 섹션 수정 완료 → PNG 추출</div><div class="ci-desc">아이콘·설명·배치. 02_sections/02_features.png 저장</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,6)"><div class="checkbox s6cb" id="cb62">　</div><div class="ci-body"><div class="ci-text">사용장면 섹션 수정 완료 → PNG 추출</div><div class="ci-desc">라이프스타일·감성 이미지. 02_sections/03_lifestyle.png 저장</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,6)"><div class="checkbox s6cb" id="cb63">　</div><div class="ci-body"><div class="ci-text">CTA 섹션 수정 완료 → PNG 추출</div><div class="ci-desc">구매 유도·가격·혜택. 02_sections/04_cta.png 저장</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,6)"><div class="checkbox s6cb" id="cb64">　</div><div class="ci-body"><div class="ci-text">02_sections/ Drive 업로드 후 기획자 알림</div><div class="ci-desc">카톡: "섹션 PNG 완성! 최종 확인 부탁드려요"</div></div><div class="who who-d">디자이너 (민지현)</div></div>
+        <div class="ci" onclick="toggle(this,6)"><div class="checkbox s6cb" id="cb65">　</div><div class="ci-body"><div class="ci-text">기획자 최종 PNG 검토 · 컨펌</div><div class="ci-desc">각 섹션 확인. Drive 댓글로 피드백. 전체 OK면 채널 변환 진행</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+      </div>
+      <div class="sc s6b" id="sc6">✓ STEP 06 완료 — 채널 변환 마지막 단계</div>
+    </div>
+    <div class="step-divider"></div>
+
+    <!-- STEP 7 -->
+    <div class="step-section" id="step7">
+      <div class="step-hdr">
+        <div class="step-badge s7">STEP 07</div>
+        <div class="step-info">
+          <div class="step-title">채널별 자동 변환 · 업로드</div>
+          <div class="step-sub">Claude Code 스크립트가 PNG를 채널 규격으로 자동 변환. 더블클릭 1번으로 완료</div>
+          <div class="step-meta"><span class="meta-tag s7b">Claude Code</span><span class="meta-tag" style="border-color:var(--text3);color:var(--text3);">⏱ 10분</span></div>
+        </div>
+      </div>
+      <div class="tools-row">
+        <div class="tool-tag" style="border-color:var(--g);color:var(--g2);"><div class="tdot" style="background:var(--g)"></div>자동 스크립트</div>
+        <div class="tool-tag" style="border-color:var(--p);color:var(--p2);"><div class="tdot" style="background:var(--p)"></div>기획자 최종</div>
+      </div>
+      <div class="checklist" id="cl7">
+        <div class="ci" onclick="toggle(this,7)"><div class="checkbox s7cb" id="cb70">　</div><div class="ci-body">
+          <div class="ci-text">채널 변환 스크립트 실행</div>
+          <div class="ci-desc">02_sections/ PNG → 03_output/ 채널별 폴더 자동 생성</div>
+          <div class="prompt-wrap"><div class="prompt-label">💬 Claude Code 프롬프트 (최초 1회)</div>
+          <div class="prompt-box">02_sections 폴더의 PNG를 채널별로 변환하는 스크립트 만들어줘.
+- 스마트스토어: 가로 860px, JPG 품질 85
+- 쿠팡: 가로 800px, JPG 품질 85
+- 자사몰: 원본 PNG 유지
+출력: 03_output/smartstore, coupang, own_mall 폴더
+파일명: 01_hero, 02_features, 03_lifestyle, 04_cta 순서 유지<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
+        </div><div class="who who-s">스크립트</div></div>
+        <div class="ci" onclick="toggle(this,7)"><div class="checkbox s7cb" id="cb71">　</div><div class="ci-body"><div class="ci-text">03_output/ 결과물 최종 확인</div><div class="ci-desc">각 채널 폴더 이미지 열어서 사이즈·품질 확인</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,7)"><div class="checkbox s7cb" id="cb72">　</div><div class="ci-body"><div class="ci-text">각 채널에 업로드</div><div class="ci-desc">스마트스토어 / 쿠팡 / 자사몰 순서로 업로드</div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,7)"><div class="checkbox s7cb" id="cb73">　</div><div class="ci-body"><div class="ci-text">제품 폴더를 완료/ 로 이동</div><div class="ci-desc">Drive: 진행중/[제품명] → 완료/[제품명] 이동. 히스토리 보존</div></div><div class="who who-b">둘 다</div></div>
+      </div>
+      <div class="sc s7b" id="sc7">✓ 전체 완료! 수고하셨습니다 🎉</div>
+    </div>
+
+    <div class="complete-banner" id="completeBanner">
+      <div style="font-size:32px;">🎉</div>
+      <h2>상세페이지 제작 완료!</h2>
+      <p id="completeSub">모든 체크리스트를 완료했습니다. 채널 업로드를 진행하세요.</p>
+    </div>
+    <div style="height:60px;"></div>
+
+  </div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+//  CONSTANTS
+// ═══════════════════════════════════════
+const TC={1:4,2:2,3:4,4:5,5:3,6:6,7:4};
+const SC={1:'var(--g)',2:'var(--p)',3:'var(--y)',4:'var(--pk)',5:'var(--o)',6:'var(--b)',7:'var(--g)'};
+const TOTAL_CHECKS=Object.values(TC).reduce((a,b)=>a+b,0); // 27
+const STEP_NAMES={1:'디자이너 입력',2:'AI 기획안',3:'기획 컨펌',4:'이미지 생성',5:'전체 톤',6:'섹션 추출',7:'채널 변환'};
+
+// ═══════════════════════════════════════
+//  PRODUCT LIST (localStorage key: fw_products)
+//  각 제품: { id, name, createdAt, checks:{} }
+// ═══════════════════════════════════════
+let products=[]; // [{id,name,createdAt,checks}]
+let activeProductId=null;
+
+function loadProducts(){
+  try{ products=JSON.parse(localStorage.getItem('fw_products')||'[]'); }
+  catch(e){ products=[]; }
+}
+function saveProducts(){
+  localStorage.setItem('fw_products',JSON.stringify(products));
+}
+function getProduct(id){ return products.find(p=>p.id===id); }
+
+function getProductProgress(p){
+  const done=Object.values(p.checks||{}).filter(Boolean).length;
+  return {done, total:TOTAL_CHECKS, pct:Math.round(done/TOTAL_CHECKS*100)};
+}
+
+function getCurrentStepName(p){
+  for(let s=1;s<=7;s++){
+    let allDone=true;
+    for(let i=0;i<TC[s];i++){
+      if(!p.checks[`s${s}_${i}`]){ allDone=false; break; }
+    }
+    if(!allDone) return STEP_NAMES[s];
+  }
+  return '완료';
+}
+
+// ═══════════════════════════════════════
+//  RENDER PRODUCT LIST (setup page)
+// ═══════════════════════════════════════
+function renderProductList(){
+  const list=document.getElementById('productList');
+  const empty=document.getElementById('emptyState');
+  const hint=document.getElementById('deleteHint');
+
+  if(!products.length){
+    empty.style.display='block';
+    list.style.display='none';
+    hint.style.display='none';
+    return;
+  }
+  empty.style.display='none';
+  list.style.display='flex';
+
+  // 항상 hint 표시 (제품 있으면)
+  hint.style.display=products.length?'flex':'none';
+
+  list.innerHTML='';
+  products.forEach(p=>{
+    const {done,total,pct}=getProductProgress(p);
+    const stepName=getCurrentStepName(p);
+    const isComplete=pct===100;
+    const isActive=p.id===activeProductId;
+    const isInProgress=pct>0&&!isComplete;
+
+    // step indicator dots
+    let dots='';
+    for(let s=1;s<=7;s++){
+      let stepDone=0;
+      for(let i=0;i<TC[s];i++) if(p.checks[`s${s}_${i}`]) stepDone++;
+      const full=stepDone===TC[s];
+      const partial=stepDone>0&&!full;
+      const color=full?getStepColor(s):(partial?getStepColor(s)+'88':'var(--border2)');
+      dots+=`<div title="STEP 0${s}: ${STEP_NAMES[s]}" style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0;transition:background .2s;"></div>`;
+    }
+
+    // 경고 아이콘 — 미완료 제품
+    const warnIcon=(!isComplete&&pct>0)?`<span title="진행 중인 제품 — 삭제 시 데이터가 모두 사라집니다" style="font-size:12px;color:var(--y);margin-left:2px;">⚠</span>`:'';
+
+    const card=document.createElement('div');
+    card.style.cssText=`background:var(--surface);border:1px solid ${isActive?'var(--o)':isComplete?'var(--g)':'var(--border)'};border-radius:10px;padding:16px 18px;transition:border-color .2s;`;
+    card.innerHTML=`
+      <div style="display:flex;align-items:center;gap:12px;">
+        <input type="checkbox" class="del-check" data-id="${p.id}" data-complete="${isComplete}"
+          style="width:16px;height:16px;cursor:pointer;accent-color:${isComplete?'var(--r)':'var(--y)'};flex-shrink:0;"
+          onclick="updateDeleteHint()"/>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap;">
+            <div style="font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+            ${isComplete?'<span style="font-size:10px;font-family:\'DM Mono\',monospace;padding:2px 7px;border-radius:3px;background:#1a2520;color:var(--g2);border:1px solid var(--g);">완료</span>':''}
+            ${isActive?'<span style="font-size:10px;font-family:\'DM Mono\',monospace;padding:2px 7px;border-radius:3px;background:#2a1a10;color:var(--o2);border:1px solid var(--o);">작업중</span>':''}
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+            <div style="flex:1;height:4px;background:var(--border2);border-radius:2px;overflow:hidden;">
+              <div style="height:100%;width:${pct}%;background:${isComplete?'var(--g)':'linear-gradient(90deg,var(--o),var(--p))'};border-radius:2px;transition:width .4s;"></div>
+            </div>
+            <div style="font-size:11px;font-family:'DM Mono',monospace;color:${isComplete?'var(--g2)':'var(--text2)'};min-width:60px;text-align:right;">${pct}% · ${isComplete?'완료':stepName}</div>
+          </div>
+          <div style="display:flex;gap:5px;align-items:center;">${dots}</div>
+        </div>
+        <button onclick="selectProduct('${p.id}')" style="background:${isActive?'var(--o)':'var(--surface2)'};color:${isActive?'#fff':'var(--text2)'};border:1px solid ${isActive?'var(--o)':'var(--border2)'};border-radius:6px;padding:7px 14px;font-size:12px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0;">${isActive?'작업중':'선택'}</button>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function getStepColor(s){
+  const map={1:'#5aad7a',2:'#8b7ff0',3:'#d4a53a',4:'#c45a90',5:'#e07a45',6:'#4a8fd4',7:'#5aad7a'};
+  return map[s]||'#888';
+}
+
+function updateDeleteHint(){
+  const checked=document.querySelectorAll('.del-check:checked');
+  const hint=document.getElementById('deleteHint');
+  // 체크된 게 있으면 삭제 버튼 강조
+  const delBtn=hint.querySelector('button');
+  const hasIncomplete=Array.from(checked).some(el=>el.dataset.complete!=='true');
+  if(delBtn){
+    delBtn.style.background=hasIncomplete?'var(--y)':'var(--r)';
+    delBtn.textContent=hasIncomplete?'⚠ 선택 삭제':'선택 삭제';
+  }
+}
+
+// ═══════════════════════════════════════
+//  ADD / DELETE PRODUCT
+// ═══════════════════════════════════════
+function openAddProduct(){
+  document.getElementById('addModal').style.display='flex';
+  setTimeout(()=>document.getElementById('newProductInput').focus(),100);
+}
+function closeAddProduct(){
+  document.getElementById('addModal').style.display='none';
+  document.getElementById('newProductInput').value='';
+}
+function confirmAddProduct(){
+  const name=document.getElementById('newProductInput').value.trim();
+  if(!name) return;
+  const p={id:'p'+Date.now(),name,createdAt:new Date().toISOString(),checks:{}};
+  products.push(p);
+  saveProducts();
+  closeAddProduct();
+  selectProduct(p.id);
+  renderProductList();
+}
+
+function deleteSelected(){
+  const checked=Array.from(document.querySelectorAll('.del-check:checked'));
+  if(!checked.length){
+    alert('삭제할 제품을 체크박스로 선택해주세요.');
+    return;
+  }
+  const ids=checked.map(el=>el.dataset.id);
+  const incompleteNames=checked
+    .filter(el=>el.dataset.complete!=='true')
+    .map(el=>getProduct(el.dataset.id)?.name)
+    .filter(Boolean);
+
+  let msg=`${ids.length}개 제품을 삭제할까요?\n삭제 후 복구 불가합니다.`;
+  if(incompleteNames.length){
+    msg=`⚠️ 아직 진행 중인 제품이 포함되어 있어요!\n\n${incompleteNames.map(n=>'· '+n).join('\n')}\n\n정말 삭제하시겠어요? 복구 불가합니다.`;
+  }
+  if(!confirm(msg)) return;
+
+  products=products.filter(p=>!ids.includes(p.id));
+  if(ids.includes(activeProductId)){
+    activeProductId=products.length?products[0].id:null;
+    if(activeProductId) loadActiveProduct();
+    else clearWorkflow();
+  }
+  saveProducts();
+  renderProductList();
+}
+
+// ═══════════════════════════════════════
+//  SELECT PRODUCT → load into workflow tab
+// ═══════════════════════════════════════
+function selectProduct(id){
+  activeProductId=id;
+  loadActiveProduct();
+  renderProductList();
+  // switch to workflow tab
+  showTab('workflow', document.querySelectorAll('.tab-btn')[1]);
+}
+
+function loadActiveProduct(){
+  const p=getProduct(activeProductId);
+  if(!p) return;
+  // set name input
+  document.getElementById('productName').value=p.name;
+  // load checks into state
+  for(let s=1;s<=7;s++) for(let i=0;i<TC[s];i++){
+    const k=`s${s}_${i}`;
+    state[k]=!!(p.checks&&p.checks[k]);
+  }
+  renderAll();
+}
+
+function clearWorkflow(){
+  document.getElementById('productName').value='';
+  for(const k in state) state[k]=false;
+  renderAll();
+}
+
+// ═══════════════════════════════════════
+//  CHECKLIST STATE (per-product)
+// ═══════════════════════════════════════
+const state={};
+
+function gk(s,i){return`s${s}_${i}`;}
+
+function saveProduct(){
+  const pn=document.getElementById('productName').value;
+  if(activeProductId){
+    const p=getProduct(activeProductId);
+    if(p){ p.name=pn; saveProducts(); renderProductList(); }
+  }
+}
+
+function toggle(el,s){
+  if(!activeProductId){
+    // no product selected — prompt
+    if(!confirm('제품을 먼저 선택하거나 추가해주세요.\n\n세팅 가이드 탭에서 제품을 추가할 수 있어요.\n\n지금 추가하시겠어요?')) return;
+    showTab('setup', document.querySelectorAll('.tab-btn')[0]);
+    openAddProduct();
+    return;
+  }
+  const items=document.getElementById('cl'+s).querySelectorAll('.ci');
+  const idx=Array.from(items).indexOf(el);
+  const k=gk(s,idx);
+  state[k]=!state[k];
+  // save into product
+  const p=getProduct(activeProductId);
+  if(p){ p.checks[k]=state[k]; saveProducts(); }
+  renderAll();
+  renderProductList();
+}
+
+function renderAll(){
+  let td=0,ta=0;
+  for(let s=1;s<=7;s++){
+    let done=0;
+    for(let i=0;i<TC[s];i++) if(state[gk(s,i)]) done++;
+    td+=done; ta+=TC[s];
+    const items=document.getElementById('cl'+s).querySelectorAll('.ci');
+    items.forEach((el,i)=>{
+      const cb=el.querySelector('.checkbox');
+      if(state[gk(s,i)]){
+        el.classList.add('checked');
+        cb.textContent='✓';cb.style.background=SC[s];cb.style.borderColor=SC[s];
+      } else {
+        el.classList.remove('checked');
+        cb.textContent='　';cb.style.background='transparent';cb.style.borderColor='var(--border2)';
+      }
+    });
+    const sc=document.getElementById('sc'+s);
+    sc&&(done===TC[s]?sc.classList.add('show'):sc.classList.remove('show'));
+    document.getElementById('nc'+s).textContent=done+'/'+TC[s];
+    const nd=document.getElementById('nd'+s);
+    if(done===TC[s]){nd.style.background=SC[s];nd.style.borderColor=SC[s];nd.style.boxShadow='none';}
+    else if(done>0){nd.style.background='transparent';nd.style.borderColor=SC[s];nd.style.boxShadow='0 0 0 2px '+SC[s]+'44';}
+    else{nd.style.background='transparent';nd.style.boxShadow='none';}
+  }
+  const pct=ta>0?Math.round(td/ta*100):0;
+  document.getElementById('progressFill').style.width=pct+'%';
+  document.getElementById('progressText').textContent=td+'/'+ta;
+  const banner=document.getElementById('completeBanner');
+  const pn=document.getElementById('productName').value;
+  if(td===ta&&ta>0){
+    banner.classList.add('show');
+    document.getElementById('completeSub').textContent=(pn?'['+pn+'] ':'')+'상세페이지 제작 완료! 채널 업로드를 진행하세요.';
+  } else banner.classList.remove('show');
+}
+
+function resetAll(){
+  if(!activeProductId){ alert('선택된 제품이 없어요.'); return; }
+  if(!confirm('현재 제품의 체크리스트를 초기화할까요?')) return;
+  const p=getProduct(activeProductId);
+  if(p){ p.checks={}; saveProducts(); }
+  for(const k in state) state[k]=false;
+  renderAll();
+  renderProductList();
+}
+
+function setActive(el){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function copyText(btn){
+  const box=btn.closest('.prompt-box,.code-block');
+  const text=box.innerText.replace('복사','').replace('✓ 복사됨','').trim();
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='✓ 복사됨';
+    setTimeout(()=>btn.textContent='복사',1600);
+  });
+}
+
+function showTab(tab,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+tab).classList.add('active');
+  btn.classList.add('active');
+  if(tab==='setup') renderProductList();
+}
+
+// scroll spy
+const secs=[1,2,3,4,5,6,7].map(i=>document.getElementById('step'+i));
+window.addEventListener('scroll',()=>{
+  if(!document.getElementById('page-workflow').classList.contains('active')) return;
+  let cur=0;
+  secs.forEach((s,i)=>{if(s&&s.getBoundingClientRect().top<=80) cur=i;});
+  document.querySelectorAll('.nav-item').forEach((n,i)=>n.classList.toggle('active',i===cur));
+},{ passive:true });
+
+// ═══════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════
+loadProducts();
+// auto-select last active product
+if(products.length){
+  const lastId=localStorage.getItem('fw_last_product');
+  activeProductId=(lastId&&getProduct(lastId))?lastId:products[0].id;
+  loadActiveProduct();
+}
+renderProductList();
+
+// save last active on change
+setInterval(()=>{
+  if(activeProductId) localStorage.setItem('fw_last_product',activeProductId);
+},2000);
+</script>
+</body>
+</html>
