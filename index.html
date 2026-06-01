@@ -265,7 +265,37 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 @media(max-width:768px){
   .pv-main{flex-direction:column;}
   .pv-slots-col{flex:none;max-width:100%;width:100%;}
+  .wf-sidebar{display:none;}        /* 사이드바 숨김 → 모바일 제품 바로 대체 */
+  .m-product-bar{display:flex;}
 }
+
+/* 모바일 제품 선택 바 + 슬라이드업 모달 */
+.m-product-bar{display:none;align-items:center;justify-content:space-between;gap:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:16px;}
+.m-product-name{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
+.m-product-change{flex-shrink:0;background:var(--o);color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
+.m-modal-overlay{display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,.6);align-items:flex-end;justify-content:center;}
+.m-modal-overlay.open{display:flex;}
+.m-modal-sheet{background:var(--surface);width:100%;max-width:560px;max-height:70vh;display:flex;flex-direction:column;border-radius:16px 16px 0 0;border:1px solid var(--border2);border-bottom:none;animation:mSlideUp .25s ease;}
+@keyframes mSlideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.m-modal-head{flex-shrink:0;padding:18px 20px 12px;border-bottom:1px solid var(--border);}
+.m-modal-head h3{font-size:16px;font-weight:500;color:var(--text);}
+.m-modal-body{overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:8px;}
+.m-empty{font-size:12px;color:var(--text3);text-align:center;padding:24px 12px;line-height:1.6;}
+.m-prod{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:10px 12px;}
+.m-prod.active{border-color:var(--o);background:#2a1a10;}
+.m-prod-main{flex:1;min-width:0;cursor:pointer;}
+.m-prod-name{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:6px;}
+.m-badge{font-size:9px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:3px;background:#2a1a10;color:var(--o2);border:1px solid var(--o);}
+.m-prod-prog{display:flex;align-items:center;gap:8px;}
+.m-prog-bar{flex:1;height:4px;background:var(--border2);border-radius:2px;overflow:hidden;}
+.m-prog-fill{height:100%;border-radius:2px;}
+.m-prog-pct{font-size:10px;font-family:'DM Mono',monospace;color:var(--text2);min-width:54px;text-align:right;}
+.m-prod-del{flex-shrink:0;width:30px;height:30px;border-radius:8px;border:1px solid var(--border2);background:var(--surface);color:var(--text3);font-size:13px;cursor:pointer;}
+.m-prod-del:hover{border-color:var(--r);color:var(--r);}
+.m-prod-del.warn{color:var(--y,#d4a53a);border-color:var(--y,#d4a53a);}
+.m-modal-foot{flex-shrink:0;display:flex;gap:10px;padding:14px 16px;border-top:1px solid var(--border);}
+.m-add-btn{flex:1;background:var(--o);color:#fff;border:none;border-radius:8px;padding:12px;font-size:13px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
+.m-close-btn{flex:1;background:var(--surface2);color:var(--text2);border:1px solid var(--border2);border-radius:8px;padding:12px;font-size:13px;font-family:'Noto Sans KR',sans-serif;cursor:pointer;}
 
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -344,6 +374,12 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 
   <!-- Content -->
   <div class="wf-content">
+
+    <!-- 모바일 전용 제품 선택 바 -->
+    <div class="m-product-bar">
+      <div class="m-product-name" id="mProductName">제품을 선택해주세요</div>
+      <button class="m-product-change" onclick="openProductModal()">제품 변경</button>
+    </div>
 
     <!-- 역할 필터 -->
     <div class="role-filter">
@@ -680,6 +716,18 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
   </div>
 </div>
 
+<!-- ── 모바일 제품 선택 모달 (슬라이드업) ── -->
+<div id="productModal" class="m-modal-overlay" onclick="if(event.target===this)closeProductModal()">
+  <div class="m-modal-sheet">
+    <div class="m-modal-head"><h3>제품 선택</h3></div>
+    <div class="m-modal-body" id="mProductList"></div>
+    <div class="m-modal-foot">
+      <button class="m-add-btn" onclick="closeProductModal();openAddProduct();">+ 새 제품 추가</button>
+      <button class="m-close-btn" onclick="closeProductModal()">닫기</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── brief.md 작성 폼 모달 ── -->
 <div id="briefModal" class="bf-overlay" onclick="if(event.target===this)closeBriefForm()">
   <div class="bf-card">
@@ -870,6 +918,48 @@ async function manualSync(){
 }
 function getProduct(id){ return products.find(p=>p.id===id); }
 
+// ── 모바일 제품 선택 (사이드바 대체) ──
+function renderMobileProducts(){
+  const label=document.getElementById('mProductName');
+  if(label){ const act=getProduct(activeProductId); label.textContent=act?act.name:'제품을 선택해주세요'; }
+  const box=document.getElementById('mProductList');
+  if(!box) return;
+  if(!products.length){ box.innerHTML='<div class="m-empty">아직 제품이 없어요.<br>+ 새 제품 추가로 등록하세요.</div>'; return; }
+  box.innerHTML=products.map(p=>{
+    const {pct}=getProductProgress(p);
+    const isActive=p.id===activeProductId, isComplete=pct===100;
+    return `<div class="m-prod${isActive?' active':''}">
+      <div class="m-prod-main" onclick="mobileSelectProduct('${p.id}')">
+        <div class="m-prod-name">${pvEsc(p.name)}${isActive?' <span class="m-badge">작업중</span>':''}</div>
+        <div class="m-prod-prog"><div class="m-prog-bar"><div class="m-prog-fill" style="width:${pct}%;background:${isComplete?'var(--g)':'linear-gradient(90deg,var(--o),var(--p))'}"></div></div><span class="m-prog-pct">${pct}%${isComplete?' · 완료':''}</span></div>
+      </div>
+      <button class="m-prod-del${isComplete?'':' warn'}" onclick="deleteOneProduct('${p.id}')" title="삭제">✕</button>
+    </div>`;
+  }).join('');
+}
+function openProductModal(){ renderMobileProducts(); document.getElementById('productModal').classList.add('open'); }
+function closeProductModal(){ document.getElementById('productModal').classList.remove('open'); }
+function mobileSelectProduct(id){ selectProduct(id); closeProductModal(); }
+
+// 모바일 단일 제품 삭제 (사이드바 deleteSelected와 동일하게 KV 저장 + 이미지 삭제)
+function deleteOneProduct(id){
+  const p=getProduct(id); if(!p) return;
+  const {pct}=getProductProgress(p);
+  let msg=`"${p.name}" 제품을 삭제할까요?\n삭제 후 복구 불가합니다.`;
+  if(pct>0 && pct<100) msg=`⚠️ 아직 진행 중인 제품이에요!\n"${p.name}"\n\n정말 삭제하시겠어요? 복구 불가합니다.`;
+  msg+='\n\n⚠️ 미리보기 이미지도 함께 삭제됩니다.';
+  if(!confirm(msg)) return;
+  try{ fetch(pvApi(id),{method:'DELETE'}); }catch(e){}
+  if(id===pvProductId){ pvProductId=null; pvInitSlots(); pvLastUpdate=''; pvRender(); }
+  products=products.filter(x=>x.id!==id);
+  if(id===activeProductId){
+    activeProductId=products.length?products[0].id:null;
+    if(activeProductId) loadActiveProduct(); else clearWorkflow();
+  }
+  saveProducts();
+  renderProductList();
+}
+
 function getProductProgress(p){
   const done=Object.values(p.checks||{}).filter(Boolean).length;
   return {done, total:TOTAL_CHECKS, pct:Math.round(done/TOTAL_CHECKS*100)};
@@ -890,6 +980,7 @@ function getCurrentStepName(p){
 //  RENDER PRODUCT LIST (setup page)
 // ═══════════════════════════════════════
 function renderProductList(){
+  renderMobileProducts();          // 모바일 제품 바/모달 동기화
   const list=document.getElementById('productList');
   const empty=document.getElementById('emptyState');
   const hint=document.getElementById('deleteHint');
