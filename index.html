@@ -219,6 +219,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .pv-btn-claude:hover{filter:brightness(1.08);}
 .pv-guide{font-size:12px;color:var(--text3);line-height:1.9;margin-top:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;}
 .pv-count{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-left:auto;}
+.pv-status{font-size:12px;color:var(--b2);font-family:'DM Mono',monospace;}
 .pv-section-label{font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:10px;}
 
 /* 좌우 레이아웃 */
@@ -625,6 +626,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
       <div class="pv-ctrl-row">
         <button class="pv-btn" onclick="pvClearAll()">🗑️ 전체 초기화</button>
         <button class="pv-btn pv-btn-claude" onclick="pvCopyFeedback(this)">🤖 Claude에게 피드백 요청</button>
+        <span class="pv-status" id="pvStatus"></span>
         <span class="pv-count" id="pvCount">0장 업로드됨</span>
       </div>
       <div class="pv-guide">① 이 버튼으로 프롬프트 복사<br>② Claude.ai 새 대화 열기<br>③ 프롬프트 붙여넣기<br>④ 미리보기 이미지들을 Claude.ai에 첨부<br>⑤ 전송 → Claude 피드백 확인</div>
@@ -899,7 +901,12 @@ function deleteSelected(){
   if(incompleteNames.length){
     msg=`⚠️ 아직 진행 중인 제품이 포함되어 있어요!\n\n${incompleteNames.map(n=>'· '+n).join('\n')}\n\n정말 삭제하시겠어요? 복구 불가합니다.`;
   }
+  msg+='\n\n⚠️ 미리보기 이미지도 함께 삭제됩니다.';
   if(!confirm(msg)) return;
+
+  // 미리보기 이미지(KV) 함께 삭제
+  ids.forEach(id=>{ try{ fetch(pvApi(id),{method:'DELETE'}); }catch(e){} });
+  if(ids.includes(pvProductId)){ pvProductId=null; pvInitSlots(); pvLastUpdate=''; pvRender(); }
 
   products=products.filter(p=>!ids.includes(p.id));
   if(ids.includes(activeProductId)){
@@ -1199,7 +1206,9 @@ let pvSlots=[];       // [{id, name, url}] — 번호 슬롯 (url 비면 빈 슬
 let pvIdSeq=0;
 let pvWidth='full';
 let pvLastUpdate='';  // 마지막 업로드/변경 시각 (포맷된 문자열)
+let pvProductId=null; // 현재 미리보기 대상 제품 id (워크플로우 activeProductId)
 const PV_MAX_SLOTS=20;
+const PREVIEW_API='https://fouring-preview-worker.minjee041.workers.dev';
 
 function pvEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
@@ -1211,6 +1220,25 @@ function pvFormatDate(d){
   return `${yr}년 ${mo}월 ${day}일 ${ampm} ${h}:${min}`;
 }
 function pvTouch(){ pvLastUpdate=pvFormatDate(new Date()); }
+function pvSetStatus(msg){ const el=document.getElementById('pvStatus'); if(el) el.textContent=msg||''; }
+function pvApi(productId){ return PREVIEW_API+'/images/'+encodeURIComponent(productId); }
+
+// 재정렬/삭제 후 전체 동기화: 전부 삭제 → 채워진 슬롯을 현재 위치(1-base)로 재저장
+async function pvSyncAll(){
+  if(!pvProductId) return;
+  pvSetStatus('💾 저장 중…');
+  try{
+    await fetch(pvApi(pvProductId),{method:'DELETE'});
+    for(let i=0;i<pvSlots.length;i++){
+      const s=pvSlots[i];
+      if(s.url){
+        await fetch(pvApi(pvProductId)+'/'+(i+1),{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({data:s.url,name:s.name||''})});
+      }
+    }
+    pvSetStatus('');
+  }catch(e){ pvSetStatus('⚠ 저장 실패 (네트워크 확인)'); setTimeout(()=>pvSetStatus(''),2500); }
+}
 
 function pvNewSlot(){ return {id:'pv'+(pvIdSeq++),name:'',url:''}; }
 function pvInitSlots(){ pvSlots=[pvNewSlot(),pvNewSlot(),pvNewSlot()]; }  // 기본 슬롯 3개
@@ -1224,7 +1252,19 @@ function pvSlotFile(ev,id){
     const slot=pvSlots.find(s=>s.id===id);
     if(slot){
       const reader=new FileReader();
-      reader.onload=e=>{ slot.url=e.target.result; slot.name=f.name; pvTouch(); pvRender(); };
+      reader.onload=async e=>{
+        slot.url=e.target.result; slot.name=f.name; pvTouch(); pvRender();   // 로컬 즉시 표시
+        if(pvProductId){                                                     // 서버(KV)에 저장
+          const pos=pvSlots.findIndex(s=>s.id===id)+1;
+          pvSetStatus('💾 저장 중…');
+          try{
+            const r=await fetch(pvApi(pvProductId)+'/'+pos,{method:'POST',headers:{'Content-Type':'application/json'},
+              body:JSON.stringify({data:slot.url,name:slot.name})});
+            if(!r.ok){ const j=await r.json().catch(()=>({})); pvSetStatus('⚠ '+(j.error||'저장 실패')); setTimeout(()=>pvSetStatus(''),3000); }
+            else pvSetStatus('');
+          }catch(err){ pvSetStatus('⚠ 저장 실패 (네트워크 확인)'); setTimeout(()=>pvSetStatus(''),3000); }
+        }
+      };
       reader.readAsDataURL(f);
     }
   }
@@ -1243,18 +1283,22 @@ function pvRemoveSlot(id){
   pvSlots=pvSlots.filter(s=>s.id!==id);
   if(had) pvTouch();                                   // 이미지 있던 슬롯 삭제 → 시각 갱신
   pvRender();
+  if(pvProductId) pvSyncAll();                         // 위치 변동 → 서버 동기화
 }
 
 function pvMove(i,dir){
   const j=i+dir;
   if(j<0||j>=pvSlots.length) return;
+  const moved=pvSlots[i].url||pvSlots[j].url;
   const t=pvSlots[i]; pvSlots[i]=pvSlots[j]; pvSlots[j]=t;
   pvRender();
+  if(moved && pvProductId) pvSyncAll();                // 이미지 위치 변동 → 서버 동기화
 }
 
 function pvClearAll(){
   if(pvSlots.some(s=>s.url) && !confirm('업로드된 이미지를 모두 삭제하고 슬롯을 초기화할까요?')) return;
   pvInitSlots(); pvLastUpdate=''; pvRender();
+  if(pvProductId) fetch(pvApi(pvProductId),{method:'DELETE'}).catch(()=>{});  // 서버 이미지 삭제
 }
 
 function pvSetWidth(w,btn){
@@ -1325,7 +1369,27 @@ function pvCopyFeedback(btn){
   });
 }
 
-// 초기 슬롯 3개 생성 후 렌더
+// 현재 제품의 이미지를 서버(KV)에서 불러와 슬롯 채우기
+async function pvLoadForProduct(productId){
+  pvProductId=productId||null;
+  if(!pvProductId){ pvInitSlots(); pvLastUpdate=''; pvRender(); return; }
+  pvSetStatus('⏳ 불러오는 중…');
+  try{
+    const res=await fetch(pvApi(pvProductId));
+    const data=await res.json();
+    const imgs=(data&&data.images)||[];
+    const maxSlot=Math.max(3, ...imgs.map(im=>Number(im.slot)||0), 0);
+    pvSlots=[];
+    for(let n=0;n<maxSlot;n++) pvSlots.push(pvNewSlot());
+    let maxTs=0;
+    imgs.forEach(im=>{ const idx=Number(im.slot)-1; if(idx>=0&&pvSlots[idx]){ pvSlots[idx].url=im.data; pvSlots[idx].name=im.name||''; if(im.ts>maxTs) maxTs=im.ts; } });
+    pvLastUpdate = maxTs ? pvFormatDate(new Date(maxTs)) : '';
+    pvRender();
+    pvSetStatus('');
+  }catch(e){ pvInitSlots(); pvLastUpdate=''; pvRender(); pvSetStatus('⚠ 불러오기 실패'); setTimeout(()=>pvSetStatus(''),2500); }
+}
+
+// 초기: 로컬 기본 슬롯 3개 (제품 이미지는 미리보기 탭 열 때 로드)
 pvInitSlots();
 pvRender();
 
@@ -1419,6 +1483,7 @@ function showTab(tab,btn){
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+tab).classList.add('active');
   btn.classList.add('active');
+  if(tab==='preview') pvLoadForProduct(activeProductId);   // 현재 제품 이미지 로드
 }
 
 // ═══════════════════════════════════════
