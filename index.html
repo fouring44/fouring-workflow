@@ -219,22 +219,31 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .pv-btn-claude:hover{filter:brightness(1.08);}
 .pv-guide{font-size:12px;color:var(--text3);line-height:1.9;margin-top:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:12px 16px;}
 .pv-count{font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-left:auto;}
-.pv-thumbs-section{margin:22px 0;display:none;}
 .pv-section-label{font-size:11px;font-family:'DM Mono',monospace;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:10px;}
-.pv-thumbs{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;}
-.pv-thumb{position:relative;flex-shrink:0;width:112px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:8px;cursor:grab;transition:border-color .15s,opacity .15s;}
-.pv-thumb:hover{border-color:var(--o);}
-.pv-thumb.pv-dragging{opacity:.4;}
-.pv-thumb.pv-over{border-color:var(--o);border-style:dashed;}
-.pv-thumb img{width:100%;height:84px;object-fit:cover;border-radius:4px;display:block;background:#fff;}
-.pv-thumb-num{position:absolute;top:5px;left:5px;background:var(--o);color:#fff;font-size:10px;font-family:'DM Mono',monospace;min-width:18px;height:18px;padding:0 4px;border-radius:9px;display:flex;align-items:center;justify-content:center;z-index:2;}
-.pv-thumb-del{position:absolute;top:5px;right:5px;background:rgba(0,0,0,.55);color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:10px;line-height:1;cursor:pointer;z-index:2;}
-.pv-thumb-del:hover{background:var(--r);}
-.pv-thumb-name{font-size:10px;color:var(--text2);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.pv-thumb-ctrl{display:flex;gap:4px;margin-top:6px;}
-.pv-thumb-ctrl button{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:4px;font-size:11px;cursor:pointer;padding:3px 0;transition:border-color .15s;}
-.pv-thumb-ctrl button:hover{border-color:var(--o);}
-.pv-width-opts{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 14px;}
+
+/* 좌우 레이아웃 */
+.pv-main{display:flex;gap:24px;margin-top:22px;align-items:flex-start;}
+.pv-slots-col{flex:0 0 40%;max-width:40%;}
+.pv-preview-col{flex:1;min-width:0;}
+
+/* 슬롯 */
+.pv-slots{display:flex;flex-direction:column;gap:10px;margin-bottom:12px;}
+.pv-slot{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px;}
+.pv-slot-num{flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--o);color:#fff;font-size:12px;font-family:'DM Mono',monospace;display:flex;align-items:center;justify-content:center;}
+.pv-slot-drop{flex:1;min-width:0;display:flex;align-items:center;gap:10px;cursor:pointer;border:1px dashed var(--border2);border-radius:6px;padding:8px 10px;min-height:54px;transition:border-color .15s;}
+.pv-slot-drop:hover{border-color:var(--o);}
+.pv-slot-drop.has-img{border-style:solid;border-color:var(--border);}
+.pv-slot-empty{font-size:12px;color:var(--text3);}
+.pv-slot-drop img{width:52px;height:52px;object-fit:cover;border-radius:4px;background:#fff;flex-shrink:0;}
+.pv-slot-name{font-size:11px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pv-slot-actions{flex-shrink:0;display:flex;gap:4px;}
+.pv-slot-actions button{background:var(--surface);border:1px solid var(--border2);border-radius:5px;width:28px;height:28px;font-size:12px;cursor:pointer;color:var(--text2);transition:border-color .15s;}
+.pv-slot-actions button:hover{border-color:var(--o);}
+.pv-slot-actions .pv-slot-x:hover{border-color:var(--r);color:var(--r);}
+.pv-add-slot{width:100%;}
+
+/* 폭 옵션 + 미리보기 */
+.pv-width-opts{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;}
 .pv-w-btn{background:var(--surface);border:1px solid var(--border);color:var(--text3);border-radius:8px;padding:8px 16px;font-size:12px;font-weight:500;font-family:'Noto Sans KR',sans-serif;cursor:pointer;transition:all .15s;}
 .pv-w-btn:hover{color:var(--text2);border-color:var(--border2);}
 .pv-w-btn.active{background:var(--o);border-color:var(--o);color:#fff;}
@@ -243,6 +252,12 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .pv-preview .pv-img{display:block;width:100%;}
 .pv-empty{padding:70px 20px;text-align:center;color:#999;font-size:13px;}
 .pv-timestamp{font-size:12px;color:#888;font-family:'DM Mono',monospace;padding:12px 16px;border-bottom:1px solid #eee;background:#fafafa;}
+
+/* 모바일: 세로 배치 */
+@media(max-width:768px){
+  .pv-main{flex-direction:column;}
+  .pv-slots-col{flex:none;max-width:100%;width:100%;}
+}
 
 ::-webkit-scrollbar{width:4px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -608,8 +623,6 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
       <h1>상세페이지 미리보기</h1>
       <p>이미지를 업로드하면 실제 상세페이지처럼 순서대로 이어서 보여줍니다</p>
       <div class="pv-ctrl-row">
-        <button class="pv-btn pv-btn-primary" onclick="document.getElementById('pvFileInput').click()">📂 이미지 업로드</button>
-        <input type="file" id="pvFileInput" accept="image/png,image/jpeg" multiple style="display:none" onchange="pvAddFiles(event)"/>
         <button class="pv-btn" onclick="pvClearAll()">🗑️ 전체 초기화</button>
         <button class="pv-btn pv-btn-claude" onclick="pvCopyFeedback(this)">🤖 Claude에게 피드백 요청</button>
         <span class="pv-count" id="pvCount">0장 업로드됨</span>
@@ -617,20 +630,26 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
       <div class="pv-guide">① 이 버튼으로 프롬프트 복사<br>② Claude.ai 새 대화 열기<br>③ 프롬프트 붙여넣기<br>④ 미리보기 이미지들을 Claude.ai에 첨부<br>⑤ 전송 → Claude 피드백 확인</div>
     </div>
 
-    <div class="pv-thumbs-section" id="pvThumbsSection">
-      <div class="pv-section-label">이미지 순서 조정 — 드래그하거나 ⬆️ ⬇️ 버튼으로 변경</div>
-      <div class="pv-thumbs" id="pvThumbs"></div>
-    </div>
+    <div class="pv-main">
+      <!-- 왼쪽 40%: 이미지 슬롯 -->
+      <div class="pv-slots-col">
+        <div class="pv-section-label">이미지 슬롯 — 번호 순서대로 상세페이지에 표시</div>
+        <div class="pv-slots" id="pvSlots"></div>
+        <button class="pv-btn pv-add-slot" onclick="pvAddSlot()">+ 이미지 추가</button>
+      </div>
 
-    <div class="pv-width-opts">
-      <button class="pv-w-btn active" onclick="pvSetWidth('full',this)">전체폭</button>
-      <button class="pv-w-btn" onclick="pvSetWidth('860',this)">860px (스마트스토어)</button>
-      <button class="pv-w-btn" onclick="pvSetWidth('800',this)">800px (쿠팡)</button>
-      <button class="pv-w-btn" onclick="pvSetWidth('375',this)">375px (모바일)</button>
-    </div>
-
-    <div class="pv-stage">
-      <div class="pv-preview" id="pvPreview"><div class="pv-empty">이미지를 업로드하면 여기에 상세페이지처럼 표시됩니다</div></div>
+      <!-- 오른쪽 60%: 미리보기 -->
+      <div class="pv-preview-col">
+        <div class="pv-width-opts">
+          <button class="pv-w-btn active" onclick="pvSetWidth('full',this)">전체폭</button>
+          <button class="pv-w-btn" onclick="pvSetWidth('860',this)">860px (스마트스토어)</button>
+          <button class="pv-w-btn" onclick="pvSetWidth('800',this)">800px (쿠팡)</button>
+          <button class="pv-w-btn" onclick="pvSetWidth('375',this)">375px (모바일)</button>
+        </div>
+        <div class="pv-stage">
+          <div class="pv-preview" id="pvPreview"><div class="pv-empty">슬롯에 이미지를 추가하면 여기에 상세페이지처럼 표시됩니다</div></div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1176,11 +1195,11 @@ function renderMjCards(items,errMsg){
 // ═══════════════════════════════════════
 //  상세페이지 미리보기 탭
 // ═══════════════════════════════════════
-let pvImages=[];      // {id, name, url}
+let pvSlots=[];       // [{id, name, url}] — 번호 슬롯 (url 비면 빈 슬롯)
 let pvIdSeq=0;
-let pvDragIndex=null;
 let pvWidth='full';
 let pvLastUpdate='';  // 마지막 업로드/변경 시각 (포맷된 문자열)
+const PV_MAX_SLOTS=20;
 
 function pvEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
@@ -1193,45 +1212,49 @@ function pvFormatDate(d){
 }
 function pvTouch(){ pvLastUpdate=pvFormatDate(new Date()); }
 
-function pvAddFiles(ev){
-  const files=Array.from(ev.target.files||[]).filter(f=>/^image\/(png|jpeg)$/.test(f.type)||/\.(png|jpe?g)$/i.test(f.name));
-  files.forEach(f=>{
-    const item={id:'pv'+(pvIdSeq++),name:f.name,url:''};
-    pvImages.push(item);                              // 선택 순서 보존
-    const reader=new FileReader();
-    reader.onload=e=>{ item.url=e.target.result; pvRender(); };
-    reader.readAsDataURL(f);
-  });
-  ev.target.value='';                                 // 같은 파일 재선택 허용
-  if(files.length) pvTouch();                          // 업로드 시각 기록
+function pvNewSlot(){ return {id:'pv'+(pvIdSeq++),name:'',url:''}; }
+function pvInitSlots(){ pvSlots=[pvNewSlot(),pvNewSlot(),pvNewSlot()]; }  // 기본 슬롯 3개
+
+// 슬롯 클릭 → 해당 슬롯 전용 파일 선택창
+function pvSlotPick(id){ const el=document.getElementById('si-'+id); if(el) el.click(); }
+
+function pvSlotFile(ev,id){
+  const f=ev.target.files&&ev.target.files[0];
+  if(f && (/^image\/(png|jpeg)$/.test(f.type)||/\.(png|jpe?g)$/i.test(f.name))){
+    const slot=pvSlots.find(s=>s.id===id);
+    if(slot){
+      const reader=new FileReader();
+      reader.onload=e=>{ slot.url=e.target.result; slot.name=f.name; pvTouch(); pvRender(); };
+      reader.readAsDataURL(f);
+    }
+  }
+  ev.target.value='';                                  // 같은 파일 재선택 허용
+}
+
+function pvAddSlot(){
+  if(pvSlots.length>=PV_MAX_SLOTS){ alert('슬롯은 최대 '+PV_MAX_SLOTS+'개까지 추가할 수 있어요.'); return; }
+  pvSlots.push(pvNewSlot());
   pvRender();
 }
 
-function pvRemove(id){ pvImages=pvImages.filter(im=>im.id!==id); pvTouch(); pvRender(); }
-
-function pvClearAll(){
-  if(pvImages.length && !confirm('업로드된 이미지를 모두 삭제할까요?')) return;
-  pvImages=[]; pvLastUpdate=''; pvRender();
+function pvRemoveSlot(id){
+  const slot=pvSlots.find(s=>s.id===id);
+  const had=slot&&slot.url;
+  pvSlots=pvSlots.filter(s=>s.id!==id);
+  if(had) pvTouch();                                   // 이미지 있던 슬롯 삭제 → 시각 갱신
+  pvRender();
 }
 
 function pvMove(i,dir){
   const j=i+dir;
-  if(j<0||j>=pvImages.length) return;
-  const t=pvImages[i]; pvImages[i]=pvImages[j]; pvImages[j]=t;
+  if(j<0||j>=pvSlots.length) return;
+  const t=pvSlots[i]; pvSlots[i]=pvSlots[j]; pvSlots[j]=t;
   pvRender();
 }
 
-// 드래그 & 드롭 순서 변경
-function pvDragStart(i,el){ pvDragIndex=i; el.classList.add('pv-dragging'); }
-function pvDragEnd(el){ el.classList.remove('pv-dragging'); document.querySelectorAll('.pv-thumb.pv-over').forEach(t=>t.classList.remove('pv-over')); }
-function pvDragOver(ev,el){ ev.preventDefault(); el.classList.add('pv-over'); }
-function pvDragLeave(el){ el.classList.remove('pv-over'); }
-function pvDrop(j){
-  if(pvDragIndex===null||pvDragIndex===j) return;
-  const [it]=pvImages.splice(pvDragIndex,1);
-  pvImages.splice(j,0,it);
-  pvDragIndex=null;
-  pvRender();
+function pvClearAll(){
+  if(pvSlots.some(s=>s.url) && !confirm('업로드된 이미지를 모두 삭제하고 슬롯을 초기화할까요?')) return;
+  pvInitSlots(); pvLastUpdate=''; pvRender();
 }
 
 function pvSetWidth(w,btn){
@@ -1243,32 +1266,34 @@ function pvSetWidth(w,btn){
 }
 
 function pvRender(){
-  document.getElementById('pvCount').textContent=pvImages.length+'장 업로드됨';
-  const section=document.getElementById('pvThumbsSection');
-  const thumbs=document.getElementById('pvThumbs');
-  const pv=document.getElementById('pvPreview');
-  if(!pvImages.length){
-    section.style.display='none';
-    thumbs.innerHTML='';
-    pv.innerHTML='<div class="pv-empty">이미지를 업로드하면 여기에 상세페이지처럼 표시됩니다</div>';
-    return;
-  }
-  section.style.display='block';
-  thumbs.innerHTML=pvImages.map((im,i)=>`
-    <div class="pv-thumb" draggable="true"
-      ondragstart="pvDragStart(${i},this)" ondragend="pvDragEnd(this)"
-      ondragover="pvDragOver(event,this)" ondragleave="pvDragLeave(this)" ondrop="pvDrop(${i})">
-      <div class="pv-thumb-num">${i+1}</div>
-      <button class="pv-thumb-del" onclick="pvRemove('${im.id}')" title="삭제">✕</button>
-      <img src="${im.url}" alt="" title="${pvEsc(im.name)}" draggable="false"/>
-      <div class="pv-thumb-name" title="${pvEsc(im.name)}">${pvEsc(im.name)}</div>
-      <div class="pv-thumb-ctrl">
-        <button onclick="pvMove(${i},-1)" title="앞으로">⬆️</button>
-        <button onclick="pvMove(${i},1)" title="뒤로">⬇️</button>
+  const filled=pvSlots.filter(s=>s.url);
+  document.getElementById('pvCount').textContent=filled.length+'장 업로드됨';
+
+  // 슬롯 목록 (왼쪽)
+  document.getElementById('pvSlots').innerHTML=pvSlots.map((s,i)=>{
+    const inner=s.url
+      ? `<img src="${s.url}" alt="" title="${pvEsc(s.name)}"/><div class="pv-slot-name" title="${pvEsc(s.name)}">${pvEsc(s.name)}</div>`
+      : `<div class="pv-slot-empty">＋ 클릭하여 이미지 업로드</div>`;
+    return `<div class="pv-slot">
+      <div class="pv-slot-num">${i+1}</div>
+      <div class="pv-slot-drop${s.url?' has-img':''}" onclick="pvSlotPick('${s.id}')">${inner}</div>
+      <div class="pv-slot-actions">
+        <button onclick="pvMove(${i},-1)" title="위로">⬆️</button>
+        <button onclick="pvMove(${i},1)" title="아래로">⬇️</button>
+        <button class="pv-slot-x" onclick="pvRemoveSlot('${s.id}')" title="슬롯 삭제">✕</button>
       </div>
-    </div>`).join('');
-  const stamp=pvLastUpdate?`<div class="pv-timestamp">📅 마지막 업로드: ${pvEsc(pvLastUpdate)}</div>`:'';
-  pv.innerHTML=stamp+pvImages.map(im=>`<img class="pv-img" src="${im.url}" alt="" title="${pvEsc(im.name)}"/>`).join('');
+      <input type="file" id="si-${s.id}" accept="image/png,image/jpeg" style="display:none" onchange="pvSlotFile(event,'${s.id}')"/>
+    </div>`;
+  }).join('');
+
+  // 미리보기 (오른쪽) — 이미지 있는 슬롯만 번호 순서대로
+  const pv=document.getElementById('pvPreview');
+  if(!filled.length){
+    pv.innerHTML='<div class="pv-empty">슬롯에 이미지를 추가하면 여기에 상세페이지처럼 표시됩니다</div>';
+  } else {
+    const stamp=pvLastUpdate?`<div class="pv-timestamp">📅 마지막 업로드: ${pvEsc(pvLastUpdate)}</div>`:'';
+    pv.innerHTML=stamp+filled.map(s=>`<img class="pv-img" src="${s.url}" alt="" title="${pvEsc(s.name)}"/>`).join('');
+  }
   pv.style.width = (pvWidth==='full') ? '100%' : (pvWidth+'px');   // 폭 유지
 }
 
@@ -1284,7 +1309,7 @@ function pvCopyFeedback(btn){
 
 📋 업로드 정보:
 - 마지막 업로드: ${pvLastUpdate||'아직 없음'}
-- 이미지 수: ${pvImages.length}장
+- 이미지 수: ${pvSlots.filter(s=>s.url).length}장
 - 확인 폭: ${pvWidthLabel()}
 
 평가 항목:
@@ -1299,6 +1324,10 @@ function pvCopyFeedback(btn){
     setTimeout(()=>btn.textContent=orig,1600);
   });
 }
+
+// 초기 슬롯 3개 생성 후 렌더
+pvInitSlots();
+pvRender();
 
 // ═══════════════════════════════════════
 //  BRIEF.MD 작성 폼
