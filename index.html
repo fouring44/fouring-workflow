@@ -23,6 +23,11 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .tab-btn:hover{color:var(--text2);}
 .tab-btn.active{color:var(--text);border-bottom-color:var(--o);}
 .tab-progress{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 24px;}
+#appLoading{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--text2);font-size:14px;font-family:'Noto Sans KR',sans-serif;}
+.save-status{font-size:11px;font-family:'DM Mono',monospace;padding:0 20px 0 4px;white-space:nowrap;color:var(--text3);transition:color .2s;}
+.save-status.saving{color:var(--b2);}
+.save-status.saved{color:var(--g2);}
+.save-status.fail{color:var(--y,#d4a53a);}
 .pb{width:120px;height:3px;background:var(--border2);border-radius:2px;overflow:hidden;}
 .pf{height:100%;background:linear-gradient(90deg,var(--o),var(--p));border-radius:2px;transition:width .4s;}
 .pt{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;min-width:44px;}
@@ -279,6 +284,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 </head>
 <body>
 
+<!-- 앱 초기 로딩 오버레이 -->
+<div id="appLoading">⏳ 데이터 불러오는 중...</div>
+
 <!-- TAB BAR -->
 <div class="tab-bar">
   <div class="tab-logo">FOURING</div>
@@ -288,6 +296,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     <div class="pb"><div class="pf" id="progressFill" style="width:0%"></div></div>
     <div class="pt" id="progressText">0/0</div>
   </div>
+  <span class="save-status" id="saveStatus"></span>
 </div>
 
 
@@ -760,6 +769,9 @@ let products=[]; // [{id,name,createdAt,checks}]
 let activeProductId=null;
 const PRODUCTS_API='https://fouring-preview-worker.minjee041.workers.dev/products';
 let _productsSaveTimer=null;
+let _saveStatusTimer=null;
+
+function setSaveStatus(msg,cls){ const el=document.getElementById('saveStatus'); if(el){ el.textContent=msg||''; el.className='save-status'+(cls?' '+cls:''); } }
 
 // 서버(KV)에서 불러오기 — 실패 시 localStorage 폴백, 서버 비었고 로컬 있으면 마이그레이션
 async function loadProducts(){
@@ -785,13 +797,20 @@ async function loadProducts(){
 // 저장: 즉시 로컬 캐시(폴백) + 서버 POST(디바운스 1초)
 function saveProducts(){
   try{ localStorage.setItem('fw_products',JSON.stringify(products)); }catch(e){}
+  setSaveStatus('저장 중…','saving');
   clearTimeout(_productsSaveTimer);
   _productsSaveTimer=setTimeout(pushProductsToServer,1000);
 }
 async function pushProductsToServer(){
   try{
-    await fetch(PRODUCTS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(products)});
-  }catch(e){ /* 실패 → localStorage 폴백 유지 */ }
+    const r=await fetch(PRODUCTS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(products)});
+    if(!r.ok) throw new Error('http '+r.status);
+    setSaveStatus('저장됨 ✓','saved');
+    clearTimeout(_saveStatusTimer); _saveStatusTimer=setTimeout(()=>setSaveStatus('',''),2000);
+  }catch(e){
+    setSaveStatus('⚠ 저장 실패 (로컬 보관)','fail');   // localStorage 폴백 유지
+    clearTimeout(_saveStatusTimer); _saveStatusTimer=setTimeout(()=>setSaveStatus('',''),3500);
+  }
 }
 function getProduct(id){ return products.find(p=>p.id===id); }
 
@@ -1563,17 +1582,18 @@ window.addEventListener('scroll',()=>{
 // ═══════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════
-// 사이드바 로딩 표시
-(function(){ const l=document.getElementById('productList'); if(l){ l.style.display='block'; l.innerHTML='<div style="font-size:12px;color:var(--text3);padding:14px;text-align:center;">⏳ 불러오는 중...</div>'; } })();
-
 (async function initProducts(){
-  await loadProducts();                       // 서버에서 제품 목록 로드
-  if(products.length){
-    const lastId=localStorage.getItem('fw_last_product');
-    activeProductId=(lastId&&getProduct(lastId))?lastId:products[0].id;
-    loadActiveProduct();
+  try{
+    await loadProducts();                       // 서버(KV)에서 제품 목록 로드
+    if(products.length){
+      const lastId=localStorage.getItem('fw_last_product');
+      activeProductId=(lastId&&getProduct(lastId))?lastId:products[0].id;
+      loadActiveProduct();
+    }
+    renderProductList();
+  } finally {
+    const ov=document.getElementById('appLoading'); if(ov) ov.style.display='none';  // 로딩 오버레이 닫기
   }
-  renderProductList();
 })();
 
 // save last active on change (기기별 UI 상태 → localStorage 유지)
