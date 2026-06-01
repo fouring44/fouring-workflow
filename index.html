@@ -24,10 +24,12 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .tab-btn.active{color:var(--text);border-bottom-color:var(--o);}
 .tab-progress{margin-left:auto;display:flex;align-items:center;gap:8px;padding:0 24px;}
 #appLoading{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--text2);font-size:14px;font-family:'Noto Sans KR',sans-serif;}
-.save-status{font-size:11px;font-family:'DM Mono',monospace;padding:0 20px 0 4px;white-space:nowrap;color:var(--text3);transition:color .2s;}
+.save-status{font-size:11px;font-family:'DM Mono',monospace;padding:0 8px 0 4px;white-space:nowrap;color:var(--text3);transition:color .2s;}
 .save-status.saving{color:var(--b2);}
 .save-status.saved{color:var(--g2);}
 .save-status.fail{color:var(--y,#d4a53a);}
+.tab-refresh{background:none;border:none;color:var(--text2);font-size:15px;line-height:1;cursor:pointer;padding:0 18px 0 0;transition:transform .25s,color .15s;}
+.tab-refresh:hover{color:var(--text);transform:rotate(90deg);}
 .pb{width:120px;height:3px;background:var(--border2);border-radius:2px;overflow:hidden;}
 .pf{height:100%;background:linear-gradient(90deg,var(--o),var(--p));border-radius:2px;transition:width .4s;}
 .pt{font-size:11px;color:var(--text2);font-family:'DM Mono',monospace;min-width:44px;}
@@ -297,6 +299,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     <div class="pt" id="progressText">0/0</div>
   </div>
   <span class="save-status" id="saveStatus"></span>
+  <button class="tab-refresh" id="tabRefresh" onclick="manualSync()" title="서버에서 최신 데이터 불러오기">🔄</button>
 </div>
 
 
@@ -770,8 +773,19 @@ let activeProductId=null;
 const PRODUCTS_API='https://fouring-preview-worker.minjee041.workers.dev/products';
 let _productsSaveTimer=null;
 let _saveStatusTimer=null;
+let _retryTimer=null;
+let _savePending=false;     // 미반영 로컬 변경(저장 대기/진행) 여부
+let _lastSaveTime=0;        // 마지막 저장 성공 시각 (폴링 쿨다운용)
+let _syncedJson='[]';       // 서버와 동기화된 것으로 간주하는 제품 JSON
+const SYNC_COOLDOWN=60000;  // 저장 직후 폴링/수동이 내 변경을 덮어쓰지 않게 (KV 전파 지연 대비)
 
-function setSaveStatus(msg,cls){ const el=document.getElementById('saveStatus'); if(el){ el.textContent=msg||''; el.className='save-status'+(cls?' '+cls:''); } }
+function setSaveStatus(msg,cls,autoClearMs){
+  const el=document.getElementById('saveStatus');
+  if(el){ el.textContent=msg||''; el.className='save-status'+(cls?' '+cls:''); }
+  clearTimeout(_saveStatusTimer);
+  if(autoClearMs) _saveStatusTimer=setTimeout(()=>setSaveStatus('',''),autoClearMs);
+}
+function productsJson(){ return JSON.stringify(products); }
 
 // 서버(KV)에서 불러오기 — 실패 시 localStorage 폴백, 서버 비었고 로컬 있으면 마이그레이션
 async function loadProducts(){
@@ -790,27 +804,69 @@ async function loadProducts(){
     pushProductsToServer();
   }else{
     products=server;                         // 서버 데이터 사용
-    try{ localStorage.setItem('fw_products',JSON.stringify(products)); }catch(_){}
+    try{ localStorage.setItem('fw_products',productsJson()); }catch(_){}
   }
+  _syncedJson=productsJson();
 }
 
-// 저장: 즉시 로컬 캐시(폴백) + 서버 POST(디바운스 1초)
+// 저장: 즉시 로컬 state/캐시 반영(화면 빠르게) + 서버 POST(디바운스 1초)
 function saveProducts(){
-  try{ localStorage.setItem('fw_products',JSON.stringify(products)); }catch(e){}
-  setSaveStatus('저장 중…','saving');
+  try{ localStorage.setItem('fw_products',productsJson()); }catch(e){}
+  _savePending=true;
+  setSaveStatus('💾 저장 중...','saving');
   clearTimeout(_productsSaveTimer);
   _productsSaveTimer=setTimeout(pushProductsToServer,1000);
 }
 async function pushProductsToServer(){
+  clearTimeout(_retryTimer);
+  const snapshot=productsJson();
   try{
-    const r=await fetch(PRODUCTS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(products)});
+    const r=await fetch(PRODUCTS_API,{method:'POST',headers:{'Content-Type':'application/json'},body:snapshot});
     if(!r.ok) throw new Error('http '+r.status);
-    setSaveStatus('저장됨 ✓','saved');
-    clearTimeout(_saveStatusTimer); _saveStatusTimer=setTimeout(()=>setSaveStatus('',''),2000);
+    _savePending=false; _lastSaveTime=Date.now(); _syncedJson=snapshot;
+    setSaveStatus('✓ 저장됨','saved',2000);
   }catch(e){
-    setSaveStatus('⚠ 저장 실패 (로컬 보관)','fail');   // localStorage 폴백 유지
-    clearTimeout(_saveStatusTimer); _saveStatusTimer=setTimeout(()=>setSaveStatus('',''),3500);
+    setSaveStatus('⚠️ 저장 실패 - 재시도 중...','fail');   // localStorage 폴백 유지, 5초 후 자동 재시도
+    _retryTimer=setTimeout(pushProductsToServer,5000);
   }
+}
+
+// 서버 데이터 채택 (다른 기기 변경분 반영)
+function applyServerProducts(arr){
+  products=Array.isArray(arr)?arr:[];
+  try{ localStorage.setItem('fw_products',productsJson()); }catch(_){}
+  _syncedJson=productsJson();
+  if(activeProductId && !getProduct(activeProductId)) activeProductId=products.length?products[0].id:null;
+  if(activeProductId) loadActiveProduct(); else clearWorkflow();   // 체크리스트 갱신
+  renderProductList();
+}
+
+// 30초 자동 폴링: 서버가 로컬과 다르면 채택 (단, 내 변경 저장 대기/쿨다운 중엔 건너뜀)
+async function pollSync(){
+  if(_savePending) return;
+  if(Date.now()-_lastSaveTime < SYNC_COOLDOWN) return;
+  try{
+    const res=await fetch(PRODUCTS_API);
+    if(!res.ok) return;
+    const d=await res.json();
+    const arr=Array.isArray(d)?d:((d&&d.products)||[]);
+    if(JSON.stringify(arr)!==productsJson()){ applyServerProducts(arr); setSaveStatus('🔄 동기화됨','saved',1000); }
+  }catch(e){ /* 폴링 오류 조용히 무시 */ }
+}
+
+// 수동 새로고침: 미저장 변경 먼저 저장 후 최신 데이터 채택
+async function manualSync(){
+  if(_savePending){ clearTimeout(_productsSaveTimer); await pushProductsToServer(); }
+  setSaveStatus('🔄 동기화 중...','saving');
+  try{
+    const res=await fetch(PRODUCTS_API);
+    if(!res.ok) throw new Error('http '+res.status);
+    const d=await res.json();
+    const arr=Array.isArray(d)?d:((d&&d.products)||[]);
+    const recentlySaved=Date.now()-_lastSaveTime < SYNC_COOLDOWN;  // 방금 저장분이면 stale read로 되돌리지 않음
+    if(JSON.stringify(arr)!==productsJson() && !recentlySaved) applyServerProducts(arr);
+    setSaveStatus('✓ 동기화됨','saved',1500);
+  }catch(e){ setSaveStatus('⚠️ 동기화 실패','fail',2500); }
 }
 function getProduct(id){ return products.find(p=>p.id===id); }
 
@@ -1600,6 +1656,9 @@ window.addEventListener('scroll',()=>{
 setInterval(()=>{
   if(activeProductId) localStorage.setItem('fw_last_product',activeProductId);
 },2000);
+
+// 30초마다 서버와 자동 동기화
+setInterval(pollSync,30000);
 </script>
 </body>
 </html>
