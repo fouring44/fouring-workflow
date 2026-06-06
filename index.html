@@ -425,7 +425,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
           <div class="ci-text">brief.md 작성 및 Drive 업로드</div>
           <div class="ci-desc">소구점 5개·타겟·가격·채널·참고사항. _템플릿/brief_양식.md 복사해서 작성</div>
           <div class="prompt-wrap"><div class="prompt-label">📄 Claude 프롬프트 — Drive MCP 연결 시</div>
-          <div class="prompt-box">훠링-상세페이지/진행중/[제품명]/brief.md 파일 읽어줘<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
+          <div class="prompt-box">훠링-상세페이지/진행중/<span id="briefReadName">[제품명]</span>/brief.md 파일 읽어줘<button class="copy-btn" onclick="copyText(this)">복사</button></div></div>
           <button class="brief-open-btn" onclick="event.stopPropagation();openBriefForm()">📝 brief 작성하기</button>
         </div><div class="who who-p">기획자 (민지홍)</div></div>
       </div>
@@ -747,6 +747,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
   <div class="bf-card">
     <div class="bf-head">
       <h3>📝 brief.md 작성</h3>
+      <span id="bf_loadStatus" style="display:none;font-size:12px;color:var(--text3);margin-left:10px;"></span>
       <button class="bf-close" onclick="closeBriefForm()" title="닫기">×</button>
     </div>
     <div class="bf-body">
@@ -1149,12 +1150,22 @@ function loadActiveProduct(){
     state[k]=!!(p.checks&&p.checks[k]);
   }
   renderAll();
+  updateBriefReadPrompt();
 }
 
 function clearWorkflow(){
   document.getElementById('productName').value='';
   for(const k in state) state[k]=false;
   renderAll();
+  updateBriefReadPrompt();
+}
+
+// STEP01 "brief.md 읽어줘" 프롬프트에 실제 제품명 반영
+function updateBriefReadPrompt(){
+  const el=document.getElementById('briefReadName');
+  if(!el) return;
+  const p=getProduct(activeProductId);
+  el.textContent=(p&&p.name&&p.name.trim())?p.name.trim():'[제품명]';
 }
 
 // ═══════════════════════════════════════
@@ -1274,16 +1285,18 @@ async function createDriveFolder(btn){
       btn.classList.add('done');
       btn.disabled=true;
       btn.textContent='✅ 폴더 생성 완료';
+      // folderId 를 제품 데이터에 저장 (KV 자동 반영)
+      if(data.folderId) p.driveFolderId=data.folderId;
       // 해당 태스크(STEP01 첫 항목) 자동 체크
       const k=gk(1,0);
       if(!state[k]){
         state[k]=true;
         if(!p.checks) p.checks={};
         p.checks[k]=true;
-        saveProducts();
-        renderAll();
-        renderProductList();
       }
+      saveProducts();   // folderId + 체크상태 함께 저장 (KV POST)
+      renderAll();
+      renderProductList();
     } else {
       throw new Error((data && data.error) || '폴더 생성에 실패했습니다.');
     }
@@ -1677,15 +1690,93 @@ pvRender();
 // ═══════════════════════════════════════
 //  BRIEF.MD 작성 폼
 // ═══════════════════════════════════════
-function openBriefForm(){
+async function openBriefForm(){
+  clearBriefForm();
   // 현재 선택된 제품명 자동 채움
+  const p=activeProductId?getProduct(activeProductId):null;
   const pn=document.getElementById('productName');
-  document.getElementById('bf_product').value=(pn&&pn.value.trim())||'';
+  document.getElementById('bf_product').value=(p&&p.name)?p.name:((pn&&pn.value.trim())||'');
   toggleCpaField();
   document.getElementById('briefModal').style.display='flex';
+
+  // driveFolderId 가 있으면 기존 brief.md 불러와서 폼 채우기
+  const status=document.getElementById('bf_loadStatus');
+  if(p && p.driveFolderId){
+    if(status){ status.textContent='⏳ 기존 내용 불러오는 중...'; status.style.display='inline'; }
+    try{
+      const res=await fetch(BRIEF_LOAD_API+'?folderId='+encodeURIComponent(p.driveFolderId));
+      const data=await res.json().catch(()=>({}));
+      if(data && data.ok && typeof data.content==='string'){
+        applyBriefMarkdown(data.content);
+        if(status){ status.textContent='✅ 기존 brief 불러옴'; setTimeout(()=>{ if(status) status.style.display='none'; },2000); }
+      } else {
+        if(status){ status.style.display='none'; }   // 404 등 → 빈 폼
+      }
+    }catch(e){
+      console.error('brief 불러오기 실패:',e);
+      if(status){ status.textContent='⚠️ 불러오기 실패 (빈 폼)'; setTimeout(()=>{ if(status) status.style.display='none'; },2500); }
+    }
+  } else {
+    if(status){ status.style.display='none'; }
+  }
 }
 function closeBriefForm(){
   document.getElementById('briefModal').style.display='none';
+}
+
+// 폼 전체 초기화
+function clearBriefForm(){
+  ['bf_product','bf_point1','bf_point2','bf_point3','bf_point4','bf_point5',
+   'bf_age','bf_situation','bf_pain','bf_price','bf_cpa',
+   'bf_competitor','bf_avoid','bf_note'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  ['bf_ch_smart','bf_ch_coupang','bf_ch_own','bf_img_front','bf_img_scene','bf_img_pkg'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.checked=false;
+  });
+}
+
+// brief.md(buildBriefMarkdown 역방향) 내용을 폼 필드에 채움
+function applyBriefMarkdown(md){
+  const lines=md.split(/\r?\n/);
+  const setVal=(id,v)=>{ const el=document.getElementById(id); if(el) el.value=v||''; };
+  const setChk=(id,b)=>{ const el=document.getElementById(id); if(el) el.checked=!!b; };
+  const getLine=(re)=>{ for(const l of lines){ const m=l.match(re); if(m) return m[1].trim(); } return null; };
+
+  const nameM=md.match(/^#\s*(.+?)\s*상세페이지 기획 브리프/m);
+  if(nameM) setVal('bf_product', nameM[1].trim());
+
+  for(let i=1;i<=5;i++){
+    const m=md.match(new RegExp('^'+i+'\\.\\s*(.*)$','m'));
+    setVal('bf_point'+i, m?m[1].trim():'');
+  }
+
+  setVal('bf_age', getLine(/^-\s*연령\/성별:\s*(.*)$/));
+  setVal('bf_situation', getLine(/^-\s*구매 상황:\s*(.*)$/));
+  setVal('bf_pain', getLine(/^-\s*페인 포인트:\s*(.*)$/));
+
+  const priceLine=getLine(/^-\s*판매가:\s*(.*)$/);
+  setVal('bf_price', priceLine?priceLine.replace(/\s*원\s*$/,'').trim():'');
+
+  // 판매 채널
+  const smartLine=lines.find(l=>l.includes('스마트스토어'))||'';
+  setChk('bf_ch_smart', /\[x\]/i.test(smartLine));
+  const cpaM=smartLine.match(/CPA 목표:\s*([0-9,]*)\s*원/);
+  setVal('bf_cpa', cpaM?cpaM[1].replace(/,/g,'').trim():'');
+  setChk('bf_ch_coupang', /\[x\]/i.test(lines.find(l=>l.includes('쿠팡'))||''));
+  setChk('bf_ch_own', /\[x\]/i.test(lines.find(l=>l.includes('자사몰'))||''));
+
+  // 보유 이미지 (Y → 체크)
+  setChk('bf_img_front', /^-\s*정면 컷:\s*Y/im.test(md));
+  setChk('bf_img_scene', /^-\s*사용장면 컷:\s*Y/im.test(md));
+  setChk('bf_img_pkg', /^-\s*패키지 컷:\s*Y/im.test(md));
+
+  // 참고사항
+  setVal('bf_competitor', getLine(/^-\s*경쟁 제품:\s*(.*)$/));
+  setVal('bf_avoid', getLine(/^-\s*강조 금지:\s*(.*)$/));
+  setVal('bf_note', getLine(/^-\s*특이사항:\s*(.*)$/));
+
+  toggleCpaField();
 }
 function toggleCpaField(){
   const on=document.getElementById('bf_ch_smart').checked;
@@ -1746,6 +1837,7 @@ function copyBrief(btn){
 }
 
 const BRIEF_UPLOAD_API=PREVIEW_API+'/drive/upload-brief';
+const BRIEF_LOAD_API=PREVIEW_API+'/drive/load-brief';
 const BRIEF_SAVE_LABEL='💾 Drive에 저장';
 
 // 브리프 작성 대상 제품명 (폼 입력 우선, 없으면 선택된 제품)
@@ -1775,13 +1867,15 @@ function saveBriefLocal(){
 async function saveBrief(btn){
   const md=buildBriefMarkdown();
   const productName=briefProductName();
-  if(!productName){ alert('제품명을 입력해주세요.'); return; }
+  const p=activeProductId?getProduct(activeProductId):null;
+  const folderId=(p&&p.driveFolderId)?p.driveFolderId:'';
+  if(!folderId && !productName){ alert('제품명을 입력하거나 먼저 Drive 폴더를 생성해주세요.'); return; }
   if(btn){ btn.disabled=true; btn.textContent='⏳ Drive에 저장 중...'; }
   try{
     const res=await fetch(BRIEF_UPLOAD_API,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({productName,content:md}),
+      body:JSON.stringify({productName,folderId,content:md}),
     });
     const data=await res.json().catch(()=>({}));
     if(!res.ok||!data.ok) throw new Error((data&&data.error)||('HTTP '+res.status));
