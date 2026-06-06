@@ -206,6 +206,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
 .bf-btn-copy:hover{border-color:var(--text3);}
 .bf-btn-save{background:var(--o);color:#fff;}
 .bf-btn-save:hover{filter:brightness(1.1);}
+.bf-btn-save:disabled{opacity:.7;cursor:default;filter:none;}
+.bf-btn-local{background:var(--surface2);color:var(--text);border:1px solid var(--border2);}
+.bf-btn-local:hover{border-color:var(--text3);}
 
 /* 태스크 카드 프롬프트 복사 버튼 (STEP 03) */
 .prompt-copy-row{display:flex;justify-content:flex-end;margin-top:12px;}
@@ -809,7 +812,8 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
     </div>
     <div class="bf-foot">
       <button class="bf-btn bf-btn-copy" onclick="copyBrief(this)">📋 클립보드에 복사</button>
-      <button class="bf-btn bf-btn-save" onclick="saveBrief()">💾 파일로 저장</button>
+      <button class="bf-btn bf-btn-local" onclick="saveBriefLocal()">💾 로컬 저장</button>
+      <button class="bf-btn bf-btn-save" onclick="saveBrief(this)">💾 Drive에 저장</button>
     </div>
   </div>
 </div>
@@ -1741,9 +1745,21 @@ function copyBrief(btn){
   });
 }
 
-function saveBrief(){
+const BRIEF_UPLOAD_API=PREVIEW_API+'/drive/upload-brief';
+const BRIEF_SAVE_LABEL='💾 Drive에 저장';
+
+// 브리프 작성 대상 제품명 (폼 입력 우선, 없으면 선택된 제품)
+function briefProductName(){
+  const bf=(document.getElementById('bf_product').value||'').trim();
+  if(bf) return bf;
+  const p=activeProductId?getProduct(activeProductId):null;
+  return p?p.name:'';
+}
+
+// 로컬 다운로드 (백업용) — 기존 동작
+function saveBriefLocal(){
   const md=buildBriefMarkdown();
-  const name=(document.getElementById('bf_product').value.trim())||'brief';
+  const name=briefProductName()||'brief';
   const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
@@ -1753,6 +1769,44 @@ function saveBrief(){
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// Drive 업로드 (기본) — 진행중/[제품명]/brief.md 로 저장
+async function saveBrief(btn){
+  const md=buildBriefMarkdown();
+  const productName=briefProductName();
+  if(!productName){ alert('제품명을 입력해주세요.'); return; }
+  if(btn){ btn.disabled=true; btn.textContent='⏳ Drive에 저장 중...'; }
+  try{
+    const res=await fetch(BRIEF_UPLOAD_API,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({productName,content:md}),
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok||!data.ok) throw new Error((data&&data.error)||('HTTP '+res.status));
+    if(btn) btn.textContent='✅ Drive에 저장됨';
+    checkBriefTask();   // 성공 시 STEP 01 brief 태스크 자동 체크
+    setTimeout(()=>{ if(btn){ btn.disabled=false; btn.textContent=BRIEF_SAVE_LABEL; } },2500);
+  }catch(e){
+    console.error('brief Drive 업로드 실패:',e);
+    if(btn){ btn.disabled=false; btn.textContent='❌ 저장 실패 - 다시 시도'; }
+  }
+}
+
+// STEP 01 의 "brief.md 작성 및 Drive 업로드" 태스크를 자동 체크
+function checkBriefTask(){
+  if(!activeProductId) return;   // 선택된 제품이 없으면 진행상황 저장 불가
+  const items=Array.from(document.getElementById('cl1').querySelectorAll('.ci'));
+  const briefCi=items.find(ci=>ci.querySelector('.brief-open-btn'));
+  if(!briefCi) return;
+  const k=gk(1,items.indexOf(briefCi));
+  if(state[k]) return;           // 이미 체크됨
+  state[k]=true;
+  const p=getProduct(activeProductId);
+  if(p){ p.checks[k]=true; saveProducts(); }
+  renderAll();
+  renderProductList();
 }
 
 function showTab(tab,btn){
