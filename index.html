@@ -479,15 +479,38 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',sans-seri
         <div class="tool-tag" style="border-color:var(--b);color:var(--b2);"><div class="tdot" style="background:var(--b)"></div>Claude 수정</div>
       </div>
       <div class="checklist" id="cl3">
-        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb30">　</div><div class="ci-body"><div class="ci-text">섹션 구성 검토</div><div class="ci-desc">히어로→특장점→사용장면→CTA 순서가 이 제품에 맞는지 확인. 순서 변경 필요 시 Claude에 요청</div><div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t1" style="white-space:pre-wrap;"></div></div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t1')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb30">　</div><div class="ci-body"><div class="ci-text">섹션 구성 검토</div><div class="ci-desc">히어로→특장점→사용장면→CTA 순서가 이 제품에 맞는지 확인. 순서 변경 필요 시 Claude에 요청</div><div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t1" style="white-space:pre-wrap;"></div></div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t1')">프롬프트 복사</button></div>
+          <button class="brief-open-btn" onclick="event.stopPropagation();runReview(this,'section',0)">🤖 자동 검토</button>
+          <div id="reviewWrap-section" style="display:none;margin-top:10px;">
+            <div style="font-size:12px;color:var(--p2);cursor:pointer;user-select:none;" onclick="event.stopPropagation();toggleReview('section')"><span id="reviewToggle-section">▶</span> 검토 결과</div>
+            <textarea id="reviewPreview-section" readonly onclick="event.stopPropagation()" style="display:none;width:100%;box-sizing:border-box;height:220px;margin-top:6px;font-size:12px;font-family:monospace;line-height:1.5;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:8px;resize:vertical;"></textarea>
+          </div>
+        </div><div class="who who-p">기획자 (민지홍)</div></div>
         <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb31">　</div><div class="ci-body">
           <div class="ci-text">카피 수정 및 확정</div>
           <div class="ci-desc">헤드카피·본문 문구 검토. 수정 필요 시 프롬프트 활용</div>
           <div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t2" style="white-space:pre-wrap;"></div></div>
           <div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t2')">프롬프트 복사</button></div>
+          <button class="brief-open-btn" onclick="event.stopPropagation();runReview(this,'copy',1)">🤖 자동 검토</button>
+          <div id="reviewWrap-copy" style="display:none;margin-top:10px;">
+            <div style="font-size:12px;color:var(--p2);cursor:pointer;user-select:none;" onclick="event.stopPropagation();toggleReview('copy')"><span id="reviewToggle-copy">▶</span> 검토 결과</div>
+            <textarea id="reviewPreview-copy" readonly onclick="event.stopPropagation()" style="display:none;width:100%;box-sizing:border-box;height:220px;margin-top:6px;font-size:12px;font-family:monospace;line-height:1.5;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:8px;resize:vertical;"></textarea>
+          </div>
         </div><div class="who who-p">기획자 (민지홍)</div></div>
-        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb32">　</div><div class="ci-body"><div class="ci-text">이미지 목록 확정</div><div class="ci-desc">보유/AI생성필요/촬영필요 분류 확인. MJ 프롬프트 방향 검토</div><div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t3" style="white-space:pre-wrap;"></div></div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t3')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
-        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb33">　</div><div class="ci-body"><div class="ci-text">planning.md 최종 업데이트 후 디자이너 알림</div><div class="ci-desc">수정 반영 후 파일 업데이트. 카톡: "기획 확정! planning.md 확인 후 이미지 작업 시작해줘요"</div><div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t4" style="white-space:pre-wrap;"></div></div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t4')">프롬프트 복사</button></div></div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb32">　</div><div class="ci-body"><div class="ci-text">이미지 목록 확정</div><div class="ci-desc">보유/AI생성필요/촬영필요 분류 확인. MJ 프롬프트 방향 검토</div><div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t3" style="white-space:pre-wrap;"></div></div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t3')">프롬프트 복사</button></div>
+          <button class="brief-open-btn" onclick="event.stopPropagation();runReview(this,'image',2)">🤖 자동 검토</button>
+          <div id="reviewWrap-image" style="display:none;margin-top:10px;">
+            <div style="font-size:12px;color:var(--p2);cursor:pointer;user-select:none;" onclick="event.stopPropagation();toggleReview('image')"><span id="reviewToggle-image">▶</span> 검토 결과</div>
+            <textarea id="reviewPreview-image" readonly onclick="event.stopPropagation()" style="display:none;width:100%;box-sizing:border-box;height:220px;margin-top:6px;font-size:12px;font-family:monospace;line-height:1.5;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:8px;resize:vertical;"></textarea>
+          </div>
+        </div><div class="who who-p">기획자 (민지홍)</div></div>
+        <div class="ci" onclick="toggle(this,3)"><div class="checkbox s3cb" id="cb33">　</div><div class="ci-body"><div class="ci-text">planning.md 최종 업데이트 후 디자이너 알림</div><div class="ci-desc">수정 반영 후 파일 업데이트. 카톡: "기획 확정! planning.md 확인 후 이미지 작업 시작해줘요"</div><div class="prompt-wrap"><div class="prompt-label">💬 Claude 프롬프트 미리보기</div><div class="prompt-box" id="pv-t4" style="white-space:pre-wrap;"></div></div><div class="prompt-copy-row"><button class="prompt-copy-btn" onclick="event.stopPropagation();copyPrompt(this,'t4')">프롬프트 복사</button></div>
+          <button class="brief-open-btn" onclick="event.stopPropagation();runReview(this,'final',3)">🤖 최종 검토·반영 (planning.md 덮어쓰기)</button>
+          <div id="reviewWrap-final" style="display:none;margin-top:10px;">
+            <div style="font-size:12px;color:var(--p2);cursor:pointer;user-select:none;" onclick="event.stopPropagation();toggleReview('final')"><span id="reviewToggle-final">▶</span> 최종 planning.md 미리보기</div>
+            <textarea id="reviewPreview-final" readonly onclick="event.stopPropagation()" style="display:none;width:100%;box-sizing:border-box;height:260px;margin-top:6px;font-size:12px;font-family:monospace;line-height:1.5;background:var(--surface2);color:var(--text);border:1px solid var(--border2);border-radius:6px;padding:8px;resize:vertical;"></textarea>
+          </div>
+        </div><div class="who who-p">기획자 (민지홍)</div></div>
       </div>
       <div class="sc s3b" id="sc3">✓ STEP 03 완료 — 이미지 생성으로</div>
     </div>
@@ -1898,6 +1921,38 @@ function setTasksChecked(s,idxs){
   let any=false;
   idxs.forEach(idx=>{ const k=gk(s,idx); if(!state[k]){ state[k]=true; if(p){ if(!p.checks)p.checks={}; p.checks[k]=true; } any=true; } });
   if(any){ saveProducts(); renderAll(); renderProductList(); }
+}
+
+// ── STEP 03: AI 기획안 검토 ──
+const REVIEW_API=PREVIEW_API+'/ai/review-planning';
+async function runReview(btn,taskType,idx){
+  const p=activeProductId?getProduct(activeProductId):null;
+  const folderId=(p&&p.driveFolderId)?p.driveFolderId:'';
+  if(!folderId){ alert('이 제품에 Drive 폴더가 없습니다. 먼저 STEP 01에서 폴더를 생성하세요.'); return; }
+  const labelDone=(taskType==='final')?'✅ 최종 반영 완료':'✅ 검토 완료';
+  btn.disabled=true; btn.textContent='⏳ 검토 중... (1~2분 소요)';
+  try{
+    const res=await fetch(REVIEW_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folderId,taskType})});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok||!data.ok) throw new Error((data&&data.error)||('HTTP '+res.status));
+    btn.disabled=false; btn.textContent=labelDone;
+    const wrap=document.getElementById('reviewWrap-'+taskType);
+    const ta=document.getElementById('reviewPreview-'+taskType);
+    if(ta) ta.value=data.content||'';
+    if(wrap) wrap.style.display='block';
+    setTasksChecked(3,[idx]);
+  }catch(e){
+    console.error('기획안 검토 실패:',e);
+    btn.disabled=false; btn.textContent='❌ 실패 - 다시 시도';
+  }
+}
+function toggleReview(taskType){
+  const ta=document.getElementById('reviewPreview-'+taskType);
+  const tg=document.getElementById('reviewToggle-'+taskType);
+  if(!ta) return;
+  const show=ta.style.display==='none';
+  ta.style.display=show?'block':'none';
+  if(tg) tg.textContent=show?'▼':'▶';
 }
 
 function showTab(tab,btn){
